@@ -21,16 +21,24 @@
 감각에 의존하던 재활 과정을  
 **숫자와 그래프로 확인 가능한 데이터**로 제공합니다.
 
+### 프로젝트 연혁
+
+본 프로젝트는 **Apple Developer Academy @ POSTECH**에서 2024년 11월~2025년 1월까지  
+6인 팀 프로젝트로 시작되었습니다.
+
+- **아카데미 프로젝트 기간**: 2024.11 ~ 2025.01
+- **원본 레포지토리**: [DeveloperAcademy-POSTECH/2025-C6-M14-Gacha](https://github.com/DeveloperAcademy-POSTECH/2025-C6-M14-Gacha)
+- **참여 팀원**: 전유진(PM), 오서진(Dev), 차원준(Dev), 김순주(UX Writer), 임준혁(Design), 황지민(Design)
+
+2025년 1월부터는 **기획자 1명과 개발자 1명**이 개인 프로젝트로 전환하여  
+지속적으로 개발하고 있습니다.
+
 ## 👥 팀원
 
 | 이름 | 역할 |
 |----|----|
-| 전유진 | Product Manager |
-| 오서진 | iOS Developer |
-| 차원준 | iOS Developer |
-| 김순주 | UX Writer |
-| 임준혁 | UI/UX Designer |
-| 황지민 | UI/UX Designer |
+| 전유진 | Product Manager & UI/UX Designer |
+| 오서진 | iOS Developer & UI/UX Designer |
 
 ---
 
