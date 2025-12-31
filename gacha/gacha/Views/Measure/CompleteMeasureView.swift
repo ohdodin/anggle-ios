@@ -103,7 +103,8 @@ struct CompleteMeasureView: View {
                             await vm.deleteTodayRecords()
                             await vm.checkTodayRecord()
                             await MainActor.run {
-                                vm.navigate(to: .home, from: .completeMeasure)
+                                vm.currentMeasurementType = .extensionAngle
+                                vm.navigate(to: .countdown, from: .completeMeasure)
                             }
                         }
                     }

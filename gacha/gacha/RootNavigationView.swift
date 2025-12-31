@@ -58,7 +58,7 @@ struct RootNavigationView: View {
 
             // 측정 탭 (메인)
             NavigationStack {
-                MeasureSelectionView()
+                MainViewBefore()
                     .navigationTitle(Strings.SelectType.title)
                     .navigationBarTitleDisplayMode(.large)
                     .fullScreenCover(isPresented: $measureVM.showMeasureFlow) {
@@ -71,15 +71,15 @@ struct RootNavigationView: View {
                                     viewForStep(step)
                                 }
                         }
-                        .interactiveDismissDisabled()
                         .environmentObject(measureVM)
                     }
+                    .environmentObject(measureVM)
+
             }
             .tag(1)
             .tabItem {
                 Label(Strings.Tabbar.measure, systemImage: "ruler")
             }
-            .environmentObject(measureVM)
 
             // 요약 탭
             NavigationStack {
@@ -145,7 +145,7 @@ struct RootNavigationView: View {
         case .countdown:
             CountdownView()
                 .navigationBarBackButtonHidden(true)
-//                .navigationTitle(measureVM.currentMeasurementType == .extensionAngle ? Strings.Extension.title : Strings.Flexion.title)
+                //                .navigationTitle(measureVM.currentMeasurementType == .extensionAngle ? Strings.Extension.title : Strings.Flexion.title)
                 .navigationBarTitleDisplayMode(.inline)
 
         case .extensionMeasure:
@@ -153,13 +153,13 @@ struct RootNavigationView: View {
                 .navigationBarBackButtonHidden(true)
                 .navigationTitle(Strings.Extension.title)
                 .navigationBarTitleDisplayMode(.inline)
-            
+
         case .extensionDone:
             ExtensionDoneView()
                 .navigationBarBackButtonHidden(true)
                 .navigationTitle(Strings.Extension.title)
                 .navigationBarTitleDisplayMode(.inline)
-            
+
         case .flexionMeasure:
             FlexionMeasureView()
                 .navigationBarBackButtonHidden(true)

@@ -97,7 +97,8 @@ struct CountdownView: View {
                     // "네"를 선택한 경우: 홈으로 이동
                     print("✅ 홈으로 이동 시작")
                     shouldNavigateToHome = false
-                    vm.navigate(to: .home, from: .countdown)
+                    vm.dismissMeasureFlow()
+//                    vm.navigate(to: .home, from: .countdown)
                 } else if shouldRestartCountdown {
                     // "아니요"를 선택한 경우: 현재 countdown 값부터 재개
                     print("✅ 카운트다운 재개 시작 (현재 값: \(countdown))")

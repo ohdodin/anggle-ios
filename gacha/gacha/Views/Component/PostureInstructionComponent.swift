@@ -66,6 +66,7 @@ struct PostureInstructionComponent: View {
                     Text(instruction.text)
                         .font(font(for: instruction.id))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .foregroundStyle(foregroundColor(for: instruction.id))
             }
