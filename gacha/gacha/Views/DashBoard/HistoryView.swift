@@ -97,14 +97,6 @@ struct History: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
                         .padding(.bottom, 20)
-
-                        // 크레딧
-                        VStack(spacing: 4) {
-                            Text("Team Anggle©")
-                            Text("v2.0.1")
-                        }
-                        .padding(.vertical, 40)
-                        .foregroundColor(.gray500)
                     }
                 }
 
