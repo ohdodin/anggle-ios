@@ -40,6 +40,10 @@ struct History: View {
                                         .font(.displaySublineBold)
                                         .foregroundColor(.blue700)
                                         .id("romChart")
+                                    // 인덱스 존재 -> 투명하게, 부재 -> 보이게
+                                        .opacity(vm.selectedROMIndex != nil ? 0 : 1)
+                                        .animation(.easeInOut(duration: 0.1), value: vm.selectedROMIndex)
+                                    
                                     if vm.chartData.isEmpty {
                                         // 측정된 데이터가 없을 때
                                         Text(Strings.History.chartRomNoRecord)
@@ -52,6 +56,9 @@ struct History: View {
                                         // SubTitle
                                         Text(vm.romSubtitle)
                                             .font(.displayFootnoteRegular)
+                                        // 인덱스 존재 -> 투명하게, 부재 -> 보이게
+                                            .opacity(vm.selectedROMIndex != nil ? 0 : 1)
+                                            .animation(.easeInOut(duration: 0.1), value: vm.selectedROMIndex)
                                         
                                         romChart
 
@@ -72,6 +79,10 @@ struct History: View {
                                         .font(.displaySublineBold)
                                         .foregroundColor(.blue700)
                                         .id("painChart")
+                                    // 인덱스 존재 -> 투명하게, 부재 -> 보이게
+                                        .opacity(vm.selectedPainIndex != nil ? 0 : 1)
+                                        .animation(.easeInOut(duration: 0.1), value: vm.selectedPainIndex)
+                                    
                                     if vm.chartData.isEmpty {
                                         // 측정된 데이터가 없을 때
                                         Text(Strings.History.chartPainNoRecord)
@@ -84,7 +95,9 @@ struct History: View {
                                         // SubTitle
                                         Text(vm.painSubtitle)
                                             .font(.displayFootnoteRegular)
-                                        
+                                        // 인덱스 존재 -> 투명하게, 부재 -> 보이게
+                                            .opacity(vm.selectedPainIndex != nil ? 0 : 1)
+                                            .animation(.easeInOut(duration: 0.1), value: vm.selectedPainIndex)
                                         painChart
                                     }
                                 }
@@ -192,7 +205,7 @@ struct History: View {
         }
         .chartYScale(domain: 0...max(150, vm.romMaxValue))
         .chartXScale(domain: domain)
-        .chartXSelection(value: $vm.selectedROMIndex)
+        .chartXSelection(value: $vm.selectedROMIndex) //롱프레스 감지
         .frame(height: 361)
         .padding(.top, 20)
     }
