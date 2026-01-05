@@ -161,7 +161,7 @@
 /* History Summary Card - Pain Change */
 "history.card.pain.title" = "통증 정도";
 "history.card.pain.step" = "단계";
-"history.card.pain.better" = "처음 기록한 날보다\n %d단계 덜 아파요!";
+"history.card.pain.better" = "처음 기록한 날보다\n%d단계 덜 아파요!";
 "history.card.pain.same" = "첫 날 이후로\n아픈 정도가 비슷해요";
 "history.card.pain.worse" = "처음 기록한 날보다\n%d단계 더 아파요";
 "history.card.pain.no_record" = "첫 기록을 남겨보세요.\nAnggle과 함께\n변화를 기록해봐요!";
