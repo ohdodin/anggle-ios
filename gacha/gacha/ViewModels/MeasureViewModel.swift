@@ -346,16 +346,11 @@ final class MeasureViewModel: ObservableObject {
         }
     }
 
-    // MARK: - 최빈값 계산
+    // MARK: - 마지막값으로 산출
     private func calculateMeasuredROM() -> Double {
-        let angles = measureManager.recordedAngles.map { $0 * 2 }  // ROM 변환
-        
-        guard !angles.isEmpty else {
-            return detectedMaxAngle
-        }
-        
-        if let modeValue = mode(of: angles.map { Int($0) }) {
-            return Double(modeValue)
+        // 마지막으로 기록된 각도
+        if let lastAngle = measureManager.recordedAngles.last {
+            return lastAngle * 2
         }
         
         return detectedMaxAngle
