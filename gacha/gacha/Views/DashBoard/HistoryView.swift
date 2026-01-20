@@ -10,7 +10,6 @@ import SwiftData
 import SwiftUI
 
 struct History: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var vm: HistoryViewModel
 
     // MARK: - Body
@@ -24,28 +23,24 @@ struct History: View {
                         VStack(spacing: 32) {
                             // MARK: - Summary Cards
                             HStack(spacing: 14) {
-                                // 무릎 굽힘 범위 카드
+                                // Rom Card
                                 romSummaryCard(proxy: proxy)
 
-                                // 통증 정도 카드
+                                // Pain Card
                                 painSummaryCard(proxy: proxy)
                             }
 
-                            // MARK: - 무릎 가동범위 추이
+                            // MARK: - ROM Chart
                             VStack(alignment: .leading, spacing: 16) {
-
-                                VStack(alignment: .leading, spacing: 8) {
+                                // Text
+                                VStack(alignment: .leading, spacing: 4) {
                                     // Title
                                     Text(Strings.History.chartRomTitle)
                                         .font(.displaySublineBold)
                                         .foregroundColor(.blue700)
                                         .id("romChart")
-                                    // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                        .opacity(vm.selectedROMIndex != nil ? 0 : 1)
-                                        .animation(.easeInOut(duration: 0.1), value: vm.selectedROMIndex)
-                                    
+                                    // Subtitle
                                     if vm.chartData.isEmpty {
-                                        // 측정된 데이터가 없을 때
                                         Text(Strings.History.chartRomNoRecord)
                                             .font(.displayFootnoteRegular)
                                             .frame(
@@ -53,38 +48,41 @@ struct History: View {
                                                 alignment: .leading
                                             )
                                     } else {
-                                        // SubTitle
                                         Text(vm.romSubtitle)
                                             .font(.displayFootnoteRegular)
-                                        // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                            .opacity(vm.selectedROMIndex != nil ? 0 : 1)
-                                            .animation(.easeInOut(duration: 0.1), value: vm.selectedROMIndex)
-                                        
-                                        romChart
-
                                     }
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(16)
-                                .background(Color("White"))
-                                .cornerRadius(24)
+                                .opacity(
+                                    vm.selectedROMIndex != nil ? 0 : 1
+                                )
+                                .animation(
+                                    .easeInOut(duration: 0.1),
+                                    value: vm.selectedROMIndex
+                                )
+                                
+                                // Chart
+                                if !vm.chartData.isEmpty {
+                                    romChart
+                                }
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(16)
+                            .background(.white)
+                            .cornerRadius(24)
 
-                            // MARK: - 통증 수준 추이
+                            // MARK: - Pain Chart
                             VStack(alignment: .leading, spacing: 16) {
-
-                                VStack(alignment: .leading, spacing: 8) {
+                                // Text
+                                VStack(alignment: .leading, spacing: 4) {
                                     // Title
                                     Text(Strings.History.chartPainTitle)
                                         .font(.displaySublineBold)
                                         .foregroundColor(.blue700)
                                         .id("painChart")
-                                    // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                        .opacity(vm.selectedPainIndex != nil ? 0 : 1)
-                                        .animation(.easeInOut(duration: 0.1), value: vm.selectedPainIndex)
-                                    
+
+                                    // Subtitle
                                     if vm.chartData.isEmpty {
-                                        // 측정된 데이터가 없을 때
+                                        // No Data
                                         Text(Strings.History.chartPainNoRecord)
                                             .font(.displayFootnoteRegular)
                                             .frame(
@@ -92,20 +90,26 @@ struct History: View {
                                                 alignment: .leading
                                             )
                                     } else {
-                                        // SubTitle
                                         Text(vm.painSubtitle)
                                             .font(.displayFootnoteRegular)
-                                        // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                            .opacity(vm.selectedPainIndex != nil ? 0 : 1)
-                                            .animation(.easeInOut(duration: 0.1), value: vm.selectedPainIndex)
-                                        painChart
                                     }
+                                }.opacity(
+                                    vm.selectedPainIndex != nil ? 0 : 1
+                                )
+                                .animation(
+                                    .easeInOut(duration: 0.1),
+                                    value: vm.selectedPainIndex
+                                )
+                                
+                                // Chart
+                                if !vm.chartData.isEmpty {
+                                    painChart
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(16)
-                                .background(Color("White"))
-                                .cornerRadius(24)
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(16)
+                            .background(.white)
+                            .cornerRadius(24)
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
@@ -142,17 +146,17 @@ struct History: View {
                 )
                 .cornerRadius(4)
             }
-            
+
             // 도딘의 유산
             // 130도 기준선
-//            RuleMark(y: .value("Target", 130))
-//                .foregroundStyle(Color("Blue700"))
-//                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-//                .annotation(position: .trailing, alignment: .center) {
-//                    Text("130°")
-//                        .font(.displayCaption1Regular)
-//                        .foregroundStyle(Color("Blue700"))
-//                }
+            //            RuleMark(y: .value("Target", 130))
+            //                .foregroundStyle(Color("Blue700"))
+            //                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
+            //                .annotation(position: .trailing, alignment: .center) {
+            //                    Text("130°")
+            //                        .font(.displayCaption1Regular)
+            //                        .foregroundStyle(Color("Blue700"))
+            //                }
 
             if let selectedIndex = selectedIndex,
                 selectedIndex >= 0 && selectedIndex < data.count
@@ -205,7 +209,7 @@ struct History: View {
         }
         .chartYScale(domain: 0...max(150, vm.romMaxValue))
         .chartXScale(domain: domain)
-        .chartXSelection(value: $vm.selectedROMIndex) //롱프레스 감지
+        .chartXSelection(value: $vm.selectedROMIndex)  //롱프레스 감지
         .frame(height: 361)
         .padding(.top, 20)
     }
@@ -222,10 +226,12 @@ struct History: View {
                     .foregroundStyle(Color("Gray700"))
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text("\(Int(selectedRecord.extensionAngle ?? 0))°~\(Int(selectedRecord.flexionAngle ?? 0))°")
-                    .font(.displayTitle2Semibold)
-                    .foregroundStyle(Color("Gray900"))
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(
+                    "\(Int(selectedRecord.extensionAngle ?? 0))°~\(Int(selectedRecord.flexionAngle ?? 0))°"
+                )
+                .font(.displayTitle2Semibold)
+                .foregroundStyle(Color("Gray900"))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
 
                 Text(vm.formatDate(selectedRecord.measuredDate))
                     .font(.displayCaption1Semibold)
@@ -343,115 +349,112 @@ struct History: View {
 
     @ViewBuilder
     private func romSummaryCard(proxy: ScrollViewProxy) -> some View {
-            VStack(alignment: .leading) {
+        VStack(alignment: .leading) {
 
-                // ROM 수치 표시
-                HStack(spacing: 0) {
-                    if vm.totalRecordCount < 2 {
-                    } else if let first = vm.firstAvailableROM,
-                              let latest = vm.latestROM
-                    {
-                        // 기록이 여러 개일 때
-                        let change = latest - first
-                        Text("\(change > 0 ? "↑" : "")\(change)°")
-                            .font(.roundedTitle1Bold)
-                            .foregroundColor(Color("Gray900"))
-                    }
-                    Spacer()
-
+            // ROM 수치 표시
+            HStack(spacing: 0) {
+                if vm.totalRecordCount < 2 {
+                } else if let first = vm.firstAvailableROM,
+                    let latest = vm.latestROM
+                {
+                    // 기록이 여러 개일 때
+                    let change = latest - first
+                    Text("\(change > 0 ? "↑" : "")\(change)°")
+                        .font(.roundedTitle1Bold)
+                        .foregroundColor(Color("Gray900"))
                 }
-                
                 Spacer()
 
-                VStack(alignment:.leading, spacing: 4){
-                    // 헤더
-                    HStack {
-                        Text(Strings.History.cardRomTitle)
-                            .font(.displaySublineBold)
-                            .foregroundColor(Color("Blue700"))
-                    }
-        
-
-                    // 변화 설명 텍스트
-                    Text(
-                        vm.totalRecordCount < 2
-                            ? Strings.History.cardRomUnder2
-                            : vm.romChangeText
-                    )
-                    .font(
-                        vm.totalRecordCount < 2
-                            ? .displayFootnoteRegular : .displayCalloutRegular
-                    )
-                    .foregroundColor(Color("Gray700"))
-                    .lineLimit(3)
-                }
-                
-
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .frame(width: 173, height: 173)
-            .background(Color.white)
-            .cornerRadius(15)
+
+            Spacer()
+
+            VStack(alignment: .leading, spacing: 4) {
+                // 헤더
+                HStack {
+                    Text(Strings.History.cardRomTitle)
+                        .font(.displaySublineBold)
+                        .foregroundColor(Color("Blue700"))
+                }
+
+                // 변화 설명 텍스트
+                Text(
+                    vm.totalRecordCount < 2
+                        ? Strings.History.cardRomUnder2
+                        : vm.romChangeText
+                )
+                .font(
+                    vm.totalRecordCount < 2
+                        ? .displayFootnoteRegular : .displayCalloutRegular
+                )
+                .foregroundColor(Color("Gray700"))
+                .lineLimit(3)
+            }
+
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .frame(width: 173, height: 173)
+        .background(Color.white)
+        .cornerRadius(15)
+    }
     @ViewBuilder
     private func painSummaryCard(proxy: ScrollViewProxy) -> some View {
 
-            VStack(alignment: .leading) {
-                
-                // 통증 레벨 바 표시
-                HStack(spacing: 0) {
-                    if vm.totalRecordCount < 2 {
+        VStack(alignment: .leading) {
 
-                    } else if let first = vm.firstAvailablePainLevel,
-                              let latest = vm.latestPainLevel
-                    {
-                        // 기록이 여러 개일 때
-                        let change = latest - first
-                        Text("\(change < 0 ? "↓" : "")\(abs(change)) \(Strings.History.cardPainStep)")
-                            .font(.roundedTitle1Bold)
-                            .foregroundColor(Color("Gray900"))
-                    }
-                    Spacer()
-                }
-                
-                Spacer()
+            // 통증 레벨 바 표시
+            HStack(spacing: 0) {
+                if vm.totalRecordCount < 2 {
 
-                VStack(alignment:.leading, spacing: 4){
-                    
-                    
-                    // 헤더
-                    HStack {
-                        Text(Strings.History.chartPainTitle)
-                            .font(.displaySublineBold)
-                            .foregroundColor(Color("Blue700"))
-                    }
-                    
-                    
-                    
-                    // 변화 설명 텍스트
+                } else if let first = vm.firstAvailablePainLevel,
+                    let latest = vm.latestPainLevel
+                {
+                    // 기록이 여러 개일 때
+                    let change = latest - first
                     Text(
-                        vm.totalRecordCount == 0
+                        "\(change < 0 ? "↓" : "")\(abs(change)) \(Strings.History.cardPainStep)"
+                    )
+                    .font(.roundedTitle1Bold)
+                    .foregroundColor(Color("Gray900"))
+                }
+                Spacer()
+            }
+
+            Spacer()
+
+            VStack(alignment: .leading, spacing: 4) {
+
+                // 헤더
+                HStack {
+                    Text(Strings.History.chartPainTitle)
+                        .font(.displaySublineBold)
+                        .foregroundColor(Color("Blue700"))
+                }
+
+                // 변화 설명 텍스트
+                Text(
+                    vm.totalRecordCount == 0
                         ? Strings.History.cardPainNoRecord
                         : (vm.totalRecordCount < 2
-                           ? Strings.History.cardPainFirstRecord
-                           : vm.painChangeText)
-                    )
-                    .font(
-                        vm.totalRecordCount < 2
+                            ? Strings.History.cardPainFirstRecord
+                            : vm.painChangeText)
+                )
+                .font(
+                    vm.totalRecordCount < 2
                         ? .displayFootnoteRegular : .displayCalloutRegular
-                    )
-                    .foregroundColor(Color("Gray700"))
-                    .lineLimit(3)
-                }
+                )
+                .foregroundColor(Color("Gray700"))
+                .lineLimit(3)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .frame(width: 173, height: 173)
-            .background(Color.white)
-            .cornerRadius(15)
-//        }
-        
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .frame(width: 173, height: 173)
+        .background(Color.white)
+        .cornerRadius(15)
+        //        }
+
     }
 
     // MARK: - Helper Methods
