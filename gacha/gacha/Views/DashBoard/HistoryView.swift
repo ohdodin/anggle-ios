@@ -9,6 +9,11 @@ import Charts
 import SwiftData
 import SwiftUI
 
+enum ChartType: Hashable {
+    case rom
+    case pain
+}
+
 struct History: View {
     @EnvironmentObject var vm: HistoryViewModel
 
@@ -32,35 +37,7 @@ struct History: View {
 
                             // MARK: - ROM Chart
                             VStack(alignment: .leading, spacing: 16) {
-                                // Text
-                                VStack(alignment: .leading, spacing: 4) {
-                                    // Title
-                                    Text(Strings.History.chartRomTitle)
-                                        .font(.displaySublineBold)
-                                        .foregroundColor(.blue700)
-                                        .id("romChart")
-                                    // Subtitle
-                                    if vm.chartData.isEmpty {
-                                        Text(Strings.History.chartRomNoRecord)
-                                            .font(.displayFootnoteRegular)
-                                            .frame(
-                                                maxWidth: .infinity,
-                                                alignment: .leading
-                                            )
-                                    } else {
-                                        Text(vm.romSubtitle)
-                                            .font(.displayFootnoteRegular)
-                                    }
-                                }
-                                .opacity(
-                                    vm.selectedROMIndex != nil ? 0 : 1
-                                )
-                                .animation(
-                                    .easeInOut(duration: 0.1),
-                                    value: vm.selectedROMIndex
-                                )
-                                
-                                // Chart
+                                ChartText(chartType: .rom)
                                 if !vm.chartData.isEmpty {
                                     romChart
                                 }
@@ -72,36 +49,7 @@ struct History: View {
 
                             // MARK: - Pain Chart
                             VStack(alignment: .leading, spacing: 16) {
-                                // Text
-                                VStack(alignment: .leading, spacing: 4) {
-                                    // Title
-                                    Text(Strings.History.chartPainTitle)
-                                        .font(.displaySublineBold)
-                                        .foregroundColor(.blue700)
-                                        .id("painChart")
-
-                                    // Subtitle
-                                    if vm.chartData.isEmpty {
-                                        // No Data
-                                        Text(Strings.History.chartPainNoRecord)
-                                            .font(.displayFootnoteRegular)
-                                            .frame(
-                                                maxWidth: .infinity,
-                                                alignment: .leading
-                                            )
-                                    } else {
-                                        Text(vm.painSubtitle)
-                                            .font(.displayFootnoteRegular)
-                                    }
-                                }.opacity(
-                                    vm.selectedPainIndex != nil ? 0 : 1
-                                )
-                                .animation(
-                                    .easeInOut(duration: 0.1),
-                                    value: vm.selectedPainIndex
-                                )
-                                
-                                // Chart
+                                ChartText(chartType: .pain)
                                 if !vm.chartData.isEmpty {
                                     painChart
                                 }
@@ -125,13 +73,42 @@ struct History: View {
         }
     }
 
+    // MARK: - Chart Text
+    private func ChartText(chartType: ChartType) -> some View {
+        return VStack(alignment: .leading, spacing: 4) {
+            // Title
+            Text(chartType == .rom ? Strings.History.chartRomTitle : Strings.History.chartPainTitle)
+                .font(.displaySublineBold)
+                .foregroundColor(.blue700)
+                .id(chartType == .rom ? "romChart" : "painChart")
+            // Subtitle
+            if vm.chartData.isEmpty {
+                Text(chartType == .rom ? Strings.History.chartRomNoRecord : Strings.History.chartPainNoRecord)
+                    .font(.displayFootnoteRegular)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
+            } else {
+                Text(chartType == .rom ? vm.romSubtitle : vm.painSubtitle)
+                    .font(.displayFootnoteRegular)
+            }
+        }
+        .opacity(
+            (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex) != nil ? 0 : 1
+        )
+        .animation(
+            .easeInOut(duration: 0.1),
+            value: (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex)
+        )
+    }
+    
     // MARK: - Chart Views
-
     private var romChart: some View {
+        let week = ["일", "월", "화", "수", "목", "금", "토"]
         let data = vm.chartData
-        let domain = vm.xAxisDomain
         let selectedIndex = vm.selectedROMIndex
-
+        
         return Chart {
 
             ForEach(data, id: \.record.id) { item in
@@ -146,17 +123,6 @@ struct History: View {
                 )
                 .cornerRadius(4)
             }
-
-            // 도딘의 유산
-            // 130도 기준선
-            //            RuleMark(y: .value("Target", 130))
-            //                .foregroundStyle(Color("Blue700"))
-            //                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-            //                .annotation(position: .trailing, alignment: .center) {
-            //                    Text("130°")
-            //                        .font(.displayCaption1Regular)
-            //                        .foregroundStyle(Color("Blue700"))
-            //                }
 
             if let selectedIndex = selectedIndex,
                 selectedIndex >= 0 && selectedIndex < data.count
@@ -208,7 +174,7 @@ struct History: View {
             }
         }
         .chartYScale(domain: 0...max(150, vm.romMaxValue))
-        .chartXScale(domain: domain)
+//        .chartXScale(domain: domain)
         .chartXSelection(value: $vm.selectedROMIndex)  //롱프레스 감지
         .frame(height: 361)
         .padding(.top, 20)
@@ -248,7 +214,7 @@ struct History: View {
 
     private var painChart: some View {
         let data = vm.chartData
-        let domain = vm.xAxisDomain
+//        let domain = vm.xAxisDomain
         let selectedIndex = vm.selectedPainIndex
 
         return Chart {
@@ -308,7 +274,7 @@ struct History: View {
             }
         }
         .chartYScale(domain: 0...10)
-        .chartXScale(domain: domain)
+//        .chartXScale(domain: domain)
         .chartXSelection(value: $vm.selectedPainIndex)
         .frame(height: 250)
         .padding(.top, 20)
