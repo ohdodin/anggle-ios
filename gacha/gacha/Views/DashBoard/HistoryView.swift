@@ -77,88 +77,108 @@ struct History: View {
     private func ChartText(chartType: ChartType) -> some View {
         return VStack(alignment: .leading, spacing: 4) {
             // Title
-            Text(chartType == .rom ? Strings.History.chartRomTitle : Strings.History.chartPainTitle)
-                .font(.displaySublineBold)
-                .foregroundColor(.blue700)
-                .id(chartType == .rom ? "romChart" : "painChart")
+            Text(
+                chartType == .rom
+                    ? Strings.History.chartRomTitle
+                    : Strings.History.chartPainTitle
+            )
+            .font(.displaySublineBold)
+            .foregroundColor(.blue700)
+            .id(chartType == .rom ? "romChart" : "painChart")
             // Subtitle
             if vm.chartData.isEmpty {
-                Text(chartType == .rom ? Strings.History.chartRomNoRecord : Strings.History.chartPainNoRecord)
-                    .font(.displayFootnoteRegular)
-                    .frame(
-                        maxWidth: .infinity,
-                        alignment: .leading
-                    )
+                Text(
+                    chartType == .rom
+                        ? Strings.History.chartRomNoRecord
+                        : Strings.History.chartPainNoRecord
+                )
+                .font(.displayFootnoteRegular)
+                .frame(
+                    maxWidth: .infinity,
+                    alignment: .leading
+                )
             } else {
                 Text(chartType == .rom ? vm.romSubtitle : vm.painSubtitle)
                     .font(.displayFootnoteRegular)
             }
         }
         .opacity(
-            (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex) != nil ? 0 : 1
+            (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex)
+                != nil ? 0 : 1
         )
         .animation(
             .easeInOut(duration: 0.1),
-            value: (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex)
+            value: (chartType == .rom
+                ? vm.selectedROMIndex : vm.selectedPainIndex)
         )
     }
-    
+
     // MARK: - Chart Views
     private var romChart: some View {
-        let week = ["일", "월", "화", "수", "목", "금", "토"]
         let data = vm.chartData
         let selectedIndex = vm.selectedROMIndex
-        
-        return Chart {
 
-            ForEach(data, id: \.record.id) { item in
-                BarMark(
-                    x: .value("index", item.index),
-                    yStart: .value("angle", item.record.extensionAngle ?? 0),
-                    yEnd: .value("angle", item.record.flexionAngle ?? 0),
-                    width: .fixed(12)
-                )
-                .foregroundStyle(
-                    Color("Blue500")
-                )
-                .cornerRadius(4)
+        let weekData = vm.getCurrentWeekData()  // 빈 데이터 가공
+
+        return Chart {
+            ForEach(0..<vm.week.count, id: \.self) { weekdayIndex in
+                let dayData = weekData[weekdayIndex]
+
+                if let record = dayData.record {
+                    BarMark(
+                        x: .value("weekday", weekdayIndex),
+                        yStart: .value("angle", record.extensionAngle ?? 0),
+                        yEnd: .value("angle", record.flexionAngle ?? 0),
+                        width: .fixed(12)
+                    )
+                    .foregroundStyle(
+                        Color("Blue500")
+                    )
+                    .cornerRadius(4)
+                } else {
+                    // 데이터가 없는 날 (빈 바)
+                    BarMark(
+                        x: .value("weekday", weekdayIndex),
+                        yStart: .value("angle", 0),
+                        yEnd: .value("angle", 0.5),
+                        width: .fixed(12)
+                    )
+                    .foregroundStyle(Color("Gray200").opacity(0.3))
+                    .cornerRadius(4)
+                }
             }
+            
 
             if let selectedIndex = selectedIndex,
-                selectedIndex >= 0 && selectedIndex < data.count
+               selectedIndex >= 0 && selectedIndex < vm.week.count
             {
-                RuleMark(x: .value("Selected", selectedIndex))
-                    .foregroundStyle(Color("Gray300"))
-                    .zIndex(-1)
-                    .annotation(
-                        position: .top,
-                        spacing: 8,
-                        overflowResolution: .init(
-                            x: .fit(to: .chart),
-                            y: .disabled
-                        )
-                    ) {
-                        romAnnotation
-                    }
+                let adjustedIndex = nearestAvailableIndex(from: selectedIndex, in: weekData)
+                if let adjustedIndex = adjustedIndex {
+                    RuleMark(x: .value("Selected", adjustedIndex))
+                        .foregroundStyle(Color("Gray300"))
+                        .zIndex(-1)
+                        .annotation(
+                            position: .top,
+                            spacing: 8,
+                            overflowResolution: .init(
+                                x: .fit(to: .chart),
+                                y: .disabled
+                            )
+                        ) {
+                            romAnnotation(at: adjustedIndex)
+                        }
+                }
             }
         }
         .chartXAxis {
-            AxisMarks(position: .bottom, values: vm.chartIndicesAsDouble) {
-                value in
-                if let doubleValue = value.as(Double.self) {
-                    let index = Int(round(doubleValue))
-                    // 정확한 인덱스 값인지 확인 (0.01 이내 오차 허용)
-                    if abs(doubleValue - Double(index)) < 0.01,
-                        index >= 0 && index < vm.recentRecords.count
-                    {
-                        let record = vm.recentRecords[index]
-                        let dateStr = vm.formatShortDate(record.measuredDate)
-                        AxisValueLabel {
-                            Text(dateStr)
-                                .offset(x: -17)
-                        }
-                    } else {
-                        AxisGridLine()
+            AxisMarks(values: .stride(by: 1)) { value in
+                if let index = value.as(Int.self),
+                    index >= 0 && index < 7
+                {
+                    AxisValueLabel {
+                        Text(vm.week[index])
+                            .font(.caption)
+                            .foregroundColor(.gray)
                     }
                 }
             }
@@ -174,18 +194,19 @@ struct History: View {
             }
         }
         .chartYScale(domain: 0...max(150, vm.romMaxValue))
-//        .chartXScale(domain: domain)
         .chartXSelection(value: $vm.selectedROMIndex)  //롱프레스 감지
         .frame(height: 361)
         .padding(.top, 20)
     }
 
     @ViewBuilder
-    private var romAnnotation: some View {
-        if let selectedIndex = vm.selectedROMIndex,
-            selectedIndex >= 0 && selectedIndex < vm.recentRecords.count
+    private func romAnnotation(at explicitIndex: Int? = nil) -> some View {
+        if let selectedIndex = explicitIndex ?? vm.selectedROMIndex,
+            selectedIndex >= 0 && selectedIndex < vm.week.count
         {
-            let selectedRecord = vm.recentRecords[selectedIndex]
+            let weekData = vm.getCurrentWeekData()
+
+            let selectedRecord = weekData[selectedIndex]
             VStack(alignment: .center, spacing: 4) {
                 Text(Strings.History.cardRomTitle)
                     .font(.displayCaption1Semibold)
@@ -193,16 +214,20 @@ struct History: View {
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
                 Text(
-                    "\(Int(selectedRecord.extensionAngle ?? 0))°~\(Int(selectedRecord.flexionAngle ?? 0))°"
+                    "\(Int(selectedRecord.record?.extensionAngle ?? 0))°~\(Int(selectedRecord.record?.flexionAngle ?? 0))°"
                 )
                 .font(.displayTitle2Semibold)
                 .foregroundStyle(Color("Gray900"))
                 .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text(vm.formatDate(selectedRecord.measuredDate))
-                    .font(.displayCaption1Semibold)
-                    .foregroundStyle(Color("Gray700"))
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(
+                    selectedRecord.record?.measuredDate != nil
+                        ? vm.formatDate(selectedRecord.record!.measuredDate)
+                        : "-"
+                )
+                .font(.displayCaption1Semibold)
+                .foregroundStyle(Color("Gray700"))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -214,7 +239,6 @@ struct History: View {
 
     private var painChart: some View {
         let data = vm.chartData
-//        let domain = vm.xAxisDomain
         let selectedIndex = vm.selectedPainIndex
 
         return Chart {
@@ -274,7 +298,7 @@ struct History: View {
             }
         }
         .chartYScale(domain: 0...10)
-//        .chartXScale(domain: domain)
+        //        .chartXScale(domain: domain)
         .chartXSelection(value: $vm.selectedPainIndex)
         .frame(height: 250)
         .padding(.top, 20)
@@ -428,6 +452,23 @@ struct History: View {
         guard let level = level else { return "-" }
         return "\(level)"
     }
+    
+    // 가장 가까운 기록이 있는 인덱스를 찾는 헬퍼
+    private func nearestAvailableIndex(from index: Int, in weekData: [HistoryViewModel.WeekDayData]) -> Int? {
+        guard index >= 0 && index < weekData.count else { return nil }
+        if weekData[index].record != nil { return index }
+        var offset = 1
+        while index - offset >= 0 || index + offset < weekData.count {
+            if index - offset >= 0, weekData[index - offset].record != nil {
+                return index - offset
+            }
+            if index + offset < weekData.count, weekData[index + offset].record != nil {
+                return index + offset
+            }
+            offset += 1
+        }
+        return nil
+    }
 }
 
 // MARK: - Previews
@@ -481,3 +522,4 @@ struct HistoryPreviewWrapper: View {
 //#Preview("Extended Records (11+)") {
 //    HistoryPreviewWrapper(scenario: .extendedRecords)
 //}
+
