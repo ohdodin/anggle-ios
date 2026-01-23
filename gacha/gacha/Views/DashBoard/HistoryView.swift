@@ -171,6 +171,25 @@ struct History: View {
             }
         }
         .chartXAxis {
+            AxisMarks(position: .bottom, values: vm.chartIndicesAsDouble) {
+                value in
+                if let doubleValue = value.as(Double.self) {
+                    let index = Int(round(doubleValue))
+                    // 정확한 인덱스 값인지 확인 (0.01 이내 오차 허용)
+                    if let index = value.as(Int.self),
+                        index >= 0 && index < 7
+                    {
+                        AxisValueLabel {
+                            Text(vm.week[index])
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .offset(x: -10)
+                        }
+                    }
+                }
+            }
+        }
+        .chartXAxis {
             AxisMarks(values: .stride(by: 1)) { value in
                 if let index = value.as(Int.self),
                     index >= 0 && index < 7
@@ -193,6 +212,7 @@ struct History: View {
                 AxisGridLine()
             }
         }
+        .chartXScale(domain: -0.5...6.5)
         .chartYScale(domain: 0...max(150, vm.romMaxValue))
         .chartXSelection(value: $vm.selectedROMIndex)  //롱프레스 감지
         .frame(height: 361)
