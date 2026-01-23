@@ -39,6 +39,7 @@ struct History: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 ChartText(chartType: .rom)
                                 if !vm.chartData.isEmpty {
+                                    romChartButton
                                     romChart
                                 }
                             }
@@ -111,6 +112,31 @@ struct History: View {
             value: (chartType == .rom
                 ? vm.selectedROMIndex : vm.selectedPainIndex)
         )
+    }
+
+    private var romChartButton: some View {
+        return HStack {
+            Button {
+                vm.currentWeekOffset += 1
+                vm.selectedROMIndex = nil
+
+            } label: {
+                Image(systemName: "chevron.left")
+            }
+            //            .disabled()
+
+            Spacer()
+
+            Button {
+                vm.currentWeekOffset -= 1
+                vm.selectedROMIndex = nil
+
+            } label: {
+                Image(systemName: "chevron.right")
+            }
+            //            .disabled()
+        }
+        .padding(.horizontal)
     }
 
     // MARK: - Chart Views
