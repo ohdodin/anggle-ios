@@ -147,12 +147,14 @@ struct History: View {
                     .cornerRadius(4)
                 }
             }
-            
 
             if let selectedIndex = selectedIndex,
-               selectedIndex >= 0 && selectedIndex < vm.week.count
+                selectedIndex >= 0 && selectedIndex < vm.week.count
             {
-                let adjustedIndex = nearestAvailableIndex(from: selectedIndex, in: weekData)
+                let adjustedIndex = nearestAvailableIndex(
+                    from: selectedIndex,
+                    in: weekData
+                )
                 if let adjustedIndex = adjustedIndex {
                     RuleMark(x: .value("Selected", adjustedIndex))
                         .foregroundStyle(Color("Gray300"))
@@ -171,13 +173,11 @@ struct History: View {
             }
         }
         .chartXAxis {
-            AxisMarks(position: .bottom, values: vm.chartIndicesAsDouble) {
+            AxisMarks(values: .stride(by: 1)) {
                 value in
-                if let doubleValue = value.as(Double.self) {
-                    let index = Int(round(doubleValue))
-                    // 정확한 인덱스 값인지 확인 (0.01 이내 오차 허용)
+                if let index = value.as(Double.self) {
                     if let index = value.as(Int.self),
-                        index >= 0 && index < 7
+                        index >= 0 && index < vm.week.count
                     {
                         AxisValueLabel {
                             Text(vm.week[index])
@@ -472,9 +472,12 @@ struct History: View {
         guard let level = level else { return "-" }
         return "\(level)"
     }
-    
+
     // 가장 가까운 기록이 있는 인덱스를 찾는 헬퍼
-    private func nearestAvailableIndex(from index: Int, in weekData: [HistoryViewModel.WeekDayData]) -> Int? {
+    private func nearestAvailableIndex(
+        from index: Int,
+        in weekData: [HistoryViewModel.WeekDayData]
+    ) -> Int? {
         guard index >= 0 && index < weekData.count else { return nil }
         if weekData[index].record != nil { return index }
         var offset = 1
@@ -482,7 +485,9 @@ struct History: View {
             if index - offset >= 0, weekData[index - offset].record != nil {
                 return index - offset
             }
-            if index + offset < weekData.count, weekData[index + offset].record != nil {
+            if index + offset < weekData.count,
+                weekData[index + offset].record != nil
+            {
                 return index + offset
             }
             offset += 1
@@ -542,4 +547,3 @@ struct HistoryPreviewWrapper: View {
 //#Preview("Extended Records (11+)") {
 //    HistoryPreviewWrapper(scenario: .extendedRecords)
 //}
-
