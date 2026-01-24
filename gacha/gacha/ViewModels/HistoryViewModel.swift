@@ -9,6 +9,11 @@ import Combine
 import SwiftData
 import SwiftUI
 
+enum ChartType: Hashable {
+    case rom
+    case pain
+}
+
 class HistoryViewModel: ObservableObject {
     private var repository: RecordRepository
 
@@ -17,8 +22,9 @@ class HistoryViewModel: ObservableObject {
     @Published var selectedROMDate: Date? = nil
     @Published var selectedPainDate: Date? = nil
     @Published var selectedROMIndex: Int? = nil  // 0~6 (일~토)
-    @Published var selectedPainIndex: Int? = nil
-    @Published var currentWeekOffset: Int = 0
+    @Published var selectedPainIndex: Int? = nil // 0~6 (일~토)
+    @Published var currentROMWeekOffset: Int = 0
+    @Published var currentPainWeekOffset: Int = 0
     @Published var isLoading: Bool = false
 
     init(repository: RecordRepository) {
@@ -27,7 +33,7 @@ class HistoryViewModel: ObservableObject {
 
     let calendar = Calendar.current
     let week = ["일", "월", "화", "수", "목", "금", "토"]
-
+    
     // MARK: - calculated property
     var romAverage: Int {
         guard !recentRecords.isEmpty else { return 0 }
@@ -406,9 +412,10 @@ class HistoryViewModel: ObservableObject {
         let record: MeasuredRecord?
     }
 
-    // currentWeekOffset에 따라 현재 주의 일-월의 데이터를 가공함
-    func getCurrentWeekData() -> [WeekDayData] {
-        let (startDate, endDate) = getWeekRange(offset: currentWeekOffset)
+    // 주어진 오프셋(기본: ROM 오프셋)에 따라 현재 주의 일-토 데이터를 가공함
+    func getCurrentWeekData(type: ChartType) -> [WeekDayData] {
+        let offset = type == .rom ? currentROMWeekOffset : currentPainWeekOffset
+        let (startDate, endDate) = getWeekRange(offset: offset)
 
         // 일주일의 날짜 배열 생성
         var weekDates: [Date] = []
@@ -421,7 +428,7 @@ class HistoryViewModel: ObservableObject {
 
         // 각 요일별(startDate ~ startDate+6)로 WeekDayData 생성; 기록 없으면 record: nil
         var recordsByDate: [Date: MeasuredRecord] = [:]
-        for record in recentRecords {
+        for record in allRecords {
             let day = calendar.startOfDay(for: record.measuredDate)
             if day >= calendar.startOfDay(for: startDate)
                 && day <= calendar.startOfDay(for: endDate)

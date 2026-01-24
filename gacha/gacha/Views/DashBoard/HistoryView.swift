@@ -9,11 +9,6 @@ import Charts
 import SwiftData
 import SwiftUI
 
-enum ChartType: Hashable {
-    case rom
-    case pain
-}
-
 struct History: View {
     @EnvironmentObject var vm: HistoryViewModel
 
@@ -64,7 +59,6 @@ struct History: View {
                         .padding(.bottom, 20)
                     }
                 }
-
             }
         }
         .background(Color("BackgoundSecondary"))
@@ -75,9 +69,6 @@ struct History: View {
 
     // MARK: - Chart Text
     private func ChartText(chartType: ChartType) -> some View {
-        let weekData = vm.getCurrentWeekData()
-        let calendar = Calendar.current
-
         return VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 // Title
@@ -108,20 +99,7 @@ struct History: View {
             }
             // Buttons & Date
             if !vm.chartData.isEmpty {
-                HStack {
-                    romChartButtonLeft
-
-                    Spacer()
-
-                    Text(
-                        "\(vm.formatDate(weekData.first?.date ?? Date())) - \(vm.formatDate(weekData.last?.date ?? Date()))"
-                    )
-                    .font(.displayFootnoteRegular)
-
-                    Spacer()
-
-                    romChartButtonRight
-                }
+                if chartType == .rom { romChartButton } else { painChartButton }
             }
         }
         .opacity(
@@ -135,9 +113,30 @@ struct History: View {
         )
     }
 
+    // MARK: - romChartButton
+    private var romChartButton: some View {
+        let weekData = vm.getCurrentWeekData(type: .rom)
+
+        return HStack {
+
+            romChartButtonLeft
+
+            Spacer()
+
+            Text(
+                "\(vm.formatDate(weekData.first?.date ?? Date())) - \(vm.formatDate(weekData.last?.date ?? Date()))"
+            )
+            .font(.displayFootnoteRegular)
+
+            Spacer()
+
+            romChartButtonRight
+        }
+    }
+
     private var romChartButtonLeft: some View {
         // 현재 주(오프셋 적용)의 주간 범위 계산
-        let weekData = vm.getCurrentWeekData()
+        let weekData = vm.getCurrentWeekData(type: .rom)
         let calendar = Calendar.current
         let currentWeekDates = weekData.compactMap { $0.date }
         let currentWeekStart = currentWeekDates.min()
@@ -165,7 +164,7 @@ struct History: View {
         return
             Button {
                 if !disableLeft {
-                    vm.currentWeekOffset += 1
+                    vm.currentROMWeekOffset += 1
                     vm.selectedROMIndex = nil
                 }
             } label: {
@@ -176,7 +175,7 @@ struct History: View {
 
     private var romChartButtonRight: some View {
         // 현재 주(오프셋 적용)의 주간 범위 계산
-        let weekData = vm.getCurrentWeekData()
+        let weekData = vm.getCurrentWeekData(type: .rom)
         let calendar = Calendar.current
         let currentWeekDates = weekData.compactMap { $0.date }
         let currentWeekStart = currentWeekDates.min()
@@ -205,7 +204,7 @@ struct History: View {
         return
             Button {
                 if !disableRight {
-                    vm.currentWeekOffset -= 1
+                    vm.currentROMWeekOffset -= 1
                     vm.selectedROMIndex = nil
                 }
             } label: {
@@ -220,7 +219,7 @@ struct History: View {
         let data = vm.chartData
         let selectedIndex = vm.selectedROMIndex
 
-        let weekData = vm.getCurrentWeekData()  // 빈 데이터 가공
+        let weekData = vm.getCurrentWeekData(type: .rom)  // 빈 데이터 가공
 
         return Chart {
             ForEach(0..<vm.week.count, id: \.self) { weekdayIndex in
@@ -291,19 +290,6 @@ struct History: View {
                 }
             }
         }
-        .chartXAxis {
-            AxisMarks(values: .stride(by: 1)) { value in
-                if let index = value.as(Int.self),
-                    index >= 0 && index < 7
-                {
-                    AxisValueLabel {
-                        Text(vm.week[index])
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                }
-            }
-        }
         .chartYAxis {
             AxisMarks { value in
                 AxisValueLabel {
@@ -326,7 +312,7 @@ struct History: View {
         if let selectedIndex = explicitIndex ?? vm.selectedROMIndex,
             selectedIndex >= 0 && selectedIndex < vm.week.count
         {
-            let weekData = vm.getCurrentWeekData()
+            let weekData = vm.getCurrentWeekData(type: .rom)
 
             let selectedRecord = weekData[selectedIndex]
             VStack(alignment: .center, spacing: 4) {
@@ -359,68 +345,187 @@ struct History: View {
         }
     }
 
+    // MARK: - painChartButton
+    private var painChartButton: some View {
+        let weekData = vm.getCurrentWeekData(type: .pain)
+
+        return HStack {
+
+            painChartButtonLeft
+
+            Spacer()
+
+            Text(
+                "\(vm.formatDate(weekData.first?.date ?? Date())) - \(vm.formatDate(weekData.last?.date ?? Date()))"
+            )
+            .font(.displayFootnoteRegular)
+
+            Spacer()
+
+            painChartButtonRight
+        }
+    }
+
+    private var painChartButtonLeft: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData(type: .pain)
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
+
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.recentRecords.first?.measuredDate
+        let dataEnd = vm.recentRecords.last?.measuredDate
+
+        // 왼쪽(과거로 이동): 이동 후 주의 끝이 데이터 시작일보다 앞서면 비활성화
+        let disableLeft: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataStart else {
+                return true
+            }
+            guard
+                let previousWeekEnd = calendar.date(
+                    byAdding: .day,
+                    value: -1,
+                    to: currentWeekStart
+                )
+            else { return true }
+            return previousWeekEnd < calendar.startOfDay(for: dataStart)
+        }()
+
+        return
+            Button {
+                if !disableLeft {
+                    vm.currentPainWeekOffset += 1
+                    vm.selectedPainIndex = nil
+                }
+            } label: {
+                Image(systemName: "chevron.left")
+            }
+            .disabled(disableLeft)
+    }
+
+    private var painChartButtonRight: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData(type: .pain)
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
+
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.recentRecords.first?.measuredDate
+        let dataEnd = vm.recentRecords.last?.measuredDate
+
+        // 오른쪽(미래로 이동): 이동 후 주의 시작이 데이터 마지막보다 뒤면 비활성화
+        let disableRight: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataEnd else {
+                return true
+            }
+            guard
+                let nextWeekStart = calendar.date(
+                    byAdding: .day,
+                    value: 1,
+                    to: currentWeekEnd
+                )
+            else { return true }
+            return calendar.startOfDay(for: nextWeekStart)
+                > calendar.startOfDay(for: dataEnd)
+        }()
+
+        return
+            Button {
+                if !disableRight {
+                    vm.currentPainWeekOffset -= 1
+                    vm.selectedPainIndex = nil
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(disableRight)
+
+    }
+
     private var painChart: some View {
         let data = vm.chartData
         let selectedIndex = vm.selectedPainIndex
 
+        let weekData = vm.getCurrentWeekData(type: .pain)  // 빈 데이터 가공
+
         return Chart {
-            ForEach(data, id: \.record.id) { item in
-                LineMark(
-                    x: .value("index", item.index),
-                    y: .value("pain", item.record.painLevel ?? 0)
-                )
-                .foregroundStyle(Color(.blue500))
-                .interpolationMethod(.catmullRom)
+            ForEach(0..<vm.week.count, id: \.self) { weekdayIndex in
+                let dayData = weekData[weekdayIndex]
 
-                PointMark(
-                    x: .value("index", item.index),
-                    y: .value("pain", item.record.painLevel ?? 0)
-                )
-                .foregroundStyle(Color("Blue500"))
-                .symbolSize(80)
+                if let record = dayData.record {
+                    LineMark(
+                        x: .value("weekday", weekdayIndex),
+                        y: .value("pain", record.painLevel ?? 0)
+                    )
+                    .foregroundStyle(Color(.blue500))
+                    .interpolationMethod(.catmullRom)
+                    PointMark(
+                        x: .value("weekday", weekdayIndex),
+                        y: .value("pain", record.painLevel ?? 0),
+                    )
+                    .foregroundStyle(Color("Blue500"))
+                    .symbolSize(80)
+
+                } else {
+                    // 데이터가 없는 날 (빈 바)
+                    BarMark(
+                        x: .value("weekday", weekdayIndex),
+                        yStart: .value("angle", 0),
+                        yEnd: .value("angle", 0.5),
+                        width: .fixed(12)
+                    )
+                    .foregroundStyle(Color("Gray200").opacity(0.3))
+                    .cornerRadius(4)
+                }
             }
-
             if let selectedIndex = selectedIndex,
-                selectedIndex >= 0 && selectedIndex < data.count
+                selectedIndex >= 0 && selectedIndex < vm.week.count
             {
-                RuleMark(x: .value("Selected", selectedIndex))
-                    .foregroundStyle(Color("Gray300"))
-                    .zIndex(-1)
-                    .annotation(
-                        position: .top,
-                        spacing: 0,
-                        overflowResolution: .init(
-                            x: .fit(to: .chart),
-                            y: .disabled
-                        )
-                    ) {
-                        painAnnotation
-                    }
+                let adjustedIndex = nearestAvailableIndex(
+                    from: selectedIndex,
+                    in: weekData
+                )
+                if let adjustedIndex = adjustedIndex {
+                    RuleMark(x: .value("Selected", adjustedIndex))
+                        .foregroundStyle(Color("Gray300"))
+                        .zIndex(-1)
+                        .annotation(
+                            position: .top,
+                            spacing: 8,
+                            overflowResolution: .init(
+                                x: .fit(to: .chart),
+                                y: .disabled
+                            )
+                        ) {
+                            romAnnotation(at: adjustedIndex)
+                        }
+                }
             }
         }
         .chartXAxis {
-            AxisMarks(position: .bottom, values: vm.chartIndicesAsDouble) {
+            AxisMarks(values: .stride(by: 1)) {
                 value in
-                if let doubleValue = value.as(Double.self) {
-                    let index = Int(round(doubleValue))
-                    // 정확한 인덱스 값인지 확인 (0.01 이내 오차 허용)
-                    if abs(doubleValue - Double(index)) < 0.01,
-                        index >= 0 && index < vm.recentRecords.count
+                if let index = value.as(Double.self) {
+                    if let index = value.as(Int.self),
+                        index >= 0 && index < vm.week.count
                     {
-                        let record = vm.recentRecords[index]
-                        let dateStr = vm.formatShortDate(record.measuredDate)
+                        AxisGridLine(centered: true)
                         AxisValueLabel {
-                            Text(dateStr)
-                                .offset(x: -17)
+                            Text(vm.week[index])
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .offset(x: -10)
                         }
-                    } else {
-                        AxisGridLine()
                     }
                 }
             }
         }
+        .chartXScale(domain: -0.5...6.5)
         .chartYScale(domain: 0...10)
-        //        .chartXScale(domain: domain)
         .chartXSelection(value: $vm.selectedPainIndex)
         .frame(height: 250)
         .padding(.top, 20)
