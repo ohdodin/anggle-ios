@@ -2,7 +2,7 @@
 //  History.swift
 //  gacha
 //
-//  Created by 차원준 on 10/26/25.
+//  Created by 차원준 on 24/01/26.
 //
 
 import Charts
@@ -39,7 +39,6 @@ struct History: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 ChartText(chartType: .rom)
                                 if !vm.chartData.isEmpty {
-                                    romChartButton
                                     romChart
                                 }
                             }
@@ -76,31 +75,53 @@ struct History: View {
 
     // MARK: - Chart Text
     private func ChartText(chartType: ChartType) -> some View {
-        return VStack(alignment: .leading, spacing: 4) {
-            // Title
-            Text(
-                chartType == .rom
-                    ? Strings.History.chartRomTitle
-                    : Strings.History.chartPainTitle
-            )
-            .font(.displaySublineBold)
-            .foregroundColor(.blue700)
-            .id(chartType == .rom ? "romChart" : "painChart")
-            // Subtitle
-            if vm.chartData.isEmpty {
+        let weekData = vm.getCurrentWeekData()
+        let calendar = Calendar.current
+
+        return VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                // Title
                 Text(
                     chartType == .rom
-                        ? Strings.History.chartRomNoRecord
-                        : Strings.History.chartPainNoRecord
+                        ? Strings.History.chartRomTitle
+                        : Strings.History.chartPainTitle
                 )
-                .font(.displayFootnoteRegular)
-                .frame(
-                    maxWidth: .infinity,
-                    alignment: .leading
-                )
-            } else {
-                Text(chartType == .rom ? vm.romSubtitle : vm.painSubtitle)
+                .font(.displaySublineBold)
+                .foregroundColor(.blue700)
+                .id(chartType == .rom ? "romChart" : "painChart")
+                // Subtitle
+                if vm.chartData.isEmpty {
+                    Text(
+                        chartType == .rom
+                            ? Strings.History.chartRomNoRecord
+                            : Strings.History.chartPainNoRecord
+                    )
                     .font(.displayFootnoteRegular)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
+                } else {
+                    Text(chartType == .rom ? vm.romSubtitle : vm.painSubtitle)
+                        .font(.displayFootnoteRegular)
+                }
+            }
+            // Buttons & Date
+            if !vm.chartData.isEmpty {
+                HStack {
+                    romChartButtonLeft
+
+                    Spacer()
+
+                    Text(
+                        "\(vm.formatDate(weekData.first?.date ?? Date())) - \(vm.formatDate(weekData.last?.date ?? Date()))"
+                    )
+                    .font(.displayFootnoteRegular)
+
+                    Spacer()
+
+                    romChartButtonRight
+                }
             }
         }
         .opacity(
@@ -114,29 +135,84 @@ struct History: View {
         )
     }
 
-    private var romChartButton: some View {
-        return HStack {
-            Button {
-                vm.currentWeekOffset += 1
-                vm.selectedROMIndex = nil
+    private var romChartButtonLeft: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData()
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
 
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.recentRecords.first?.measuredDate
+        let dataEnd = vm.recentRecords.last?.measuredDate
+
+        // 왼쪽(과거로 이동): 이동 후 주의 끝이 데이터 시작일보다 앞서면 비활성화
+        let disableLeft: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataStart else {
+                return true
+            }
+            guard
+                let previousWeekEnd = calendar.date(
+                    byAdding: .day,
+                    value: -1,
+                    to: currentWeekStart
+                )
+            else { return true }
+            return previousWeekEnd < calendar.startOfDay(for: dataStart)
+        }()
+
+        return
+            Button {
+                if !disableLeft {
+                    vm.currentWeekOffset += 1
+                    vm.selectedROMIndex = nil
+                }
             } label: {
                 Image(systemName: "chevron.left")
             }
-            //            .disabled()
+            .disabled(disableLeft)
+    }
 
-            Spacer()
+    private var romChartButtonRight: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData()
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
 
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.recentRecords.first?.measuredDate
+        let dataEnd = vm.recentRecords.last?.measuredDate
+
+        // 오른쪽(미래로 이동): 이동 후 주의 시작이 데이터 마지막보다 뒤면 비활성화
+        let disableRight: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataEnd else {
+                return true
+            }
+            guard
+                let nextWeekStart = calendar.date(
+                    byAdding: .day,
+                    value: 1,
+                    to: currentWeekEnd
+                )
+            else { return true }
+            return calendar.startOfDay(for: nextWeekStart)
+                > calendar.startOfDay(for: dataEnd)
+        }()
+
+        return
             Button {
-                vm.currentWeekOffset -= 1
-                vm.selectedROMIndex = nil
-
+                if !disableRight {
+                    vm.currentWeekOffset -= 1
+                    vm.selectedROMIndex = nil
+                }
             } label: {
                 Image(systemName: "chevron.right")
             }
-            //            .disabled()
-        }
-        .padding(.horizontal)
+            .disabled(disableRight)
+
     }
 
     // MARK: - Chart Views
