@@ -32,8 +32,28 @@ class HistoryViewModel: ObservableObject {
     }
 
     let calendar = Calendar.current
-    let week = ["일", "월", "화", "수", "목", "금", "토"]
     
+    var week: [String] {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.calendar = calendar
+        formatter.dateFormat = "EEE"
+        
+        let today = Date()
+        let weekdayIndex = calendar.component(.weekday, from: today) - 1 // 0=일, 6=토
+        guard let sunday = calendar.date(byAdding: .day, value: -weekdayIndex, to: today) else {
+            return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] // fallback
+        }
+
+        return (0..<7).compactMap { i in
+            if let date = calendar.date(byAdding: .day, value: i, to: sunday) {
+                return formatter.string(from: date)
+            } else {
+                return nil
+            }
+        }
+    }
+        
     // MARK: - calculated property
     var romAverage: Int {
         guard !recentRecords.isEmpty else { return 0 }
