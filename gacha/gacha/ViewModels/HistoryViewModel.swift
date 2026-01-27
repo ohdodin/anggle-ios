@@ -459,7 +459,7 @@ class HistoryViewModel: ObservableObject {
         
         // 0~6(일~토) 모두 포함, 기록 없으면 nil
         return (0..<7).map { i in
-            let date = calendar.date(byAdding: .day, value: i, to: startDate)!
+            let date = calendar.date(byAdding: .day, value: i, to: startDate) ?? startDate
             let day = calendar.startOfDay(for: date)
             return WeekDayData(
                 weekdayIndex: i,
