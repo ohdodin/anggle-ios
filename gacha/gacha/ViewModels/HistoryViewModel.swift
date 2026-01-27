@@ -220,12 +220,14 @@ class HistoryViewModel: ObservableObject {
         )
         let days = max(components.day ?? 0, 0)  // 음수 방지
 
+        #if DEBUG
         print("📅 [daysBetweenRecords] 계산:")
         print("   - 첫 기록: \(firstDate) -> \(formatShortDate(firstDate))")
         print("   - 마지막 기록: \(lastDate) -> \(formatShortDate(lastDate))")
         print("   - 첫 날 시작: \(firstDayStart)")
         print("   - 마지막 날 시작: \(lastDayStart)")
         print("   - 날짜 차이: \(days)일")
+        #endif
 
         return days
     }
@@ -400,6 +402,7 @@ class HistoryViewModel: ObservableObject {
             let ascending = Array(fetchedRecords.reversed())
             allRecords = ascending
             recentRecords = Array(ascending.suffix(7))
+            #if DEBUG
             print(
                 "📅 loadRecentRecords - Total records: \(allRecords.count), Recent records: \(recentRecords.count)"
             )
@@ -408,6 +411,7 @@ class HistoryViewModel: ObservableObject {
                     "  [\(index)] Date: \(record.measuredDate), Formatted: \(formatShortDate(record.measuredDate))"
                 )
             }
+            #endif
         } catch {
             print("❌ 최근 기록 로드 실패: \(error)")
             recentRecords = []
