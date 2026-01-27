@@ -32,7 +32,7 @@ struct History: View {
 
                             // MARK: - ROM Chart
                             VStack(alignment: .leading, spacing: 16) {
-                                ChartText(chartType: .rom)
+                                ChartHeader(chartType: .rom)
                                 if !vm.chartData.isEmpty {
                                     romChart
                                 }
@@ -44,7 +44,7 @@ struct History: View {
 
                             // MARK: - Pain Chart
                             VStack(alignment: .leading, spacing: 16) {
-                                ChartText(chartType: .pain)
+                                ChartHeader(chartType: .pain)
                                 if !vm.chartData.isEmpty {
                                     painChart
                                 }
@@ -67,9 +67,9 @@ struct History: View {
         }
     }
 
-    // MARK: - Chart Text
-    private func ChartText(chartType: ChartType) -> some View {
-        return VStack(alignment: .leading, spacing: 16) {
+    // MARK: - Chart Header
+    private func ChartHeader(chartType: ChartType) -> some View {
+        return VStack(alignment: .leading, spacing: 8) {
             // Title
             Text(
                 chartType == .rom
@@ -96,7 +96,25 @@ struct History: View {
                     Text(chartType == .rom ? vm.romSubtitle : vm.painSubtitle)
                         .font(.displayFootnoteRegular)
                 }
-
+                
+                // Period Selector
+                Picker("", selection: chartType == .rom ? $vm.romPeriod : $vm.painPeriod) {
+                    Text("주").tag(ChartPeriod.week)
+                    Text("월").tag(ChartPeriod.month)
+                    Text("월").tag(ChartPeriod.threeMonth)
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: chartType == .rom ? vm.romPeriod : vm.painPeriod) { _ in
+                    // 기간 바뀔 때 선택 초기화 / 오프셋 초기화(필요시)
+                    if chartType == .rom {
+                        vm.selectedROMIndex = nil
+                        vm.currentROMWeekOffset = 0
+                    } else {
+                        vm.selectedPainIndex = nil
+                        vm.currentPainWeekOffset = 0
+                    }
+                }
+                
                 // Buttons & Date
                 if !vm.chartData.isEmpty {
                     if chartType == .rom {

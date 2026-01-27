@@ -169,6 +169,11 @@
 "history.card.pain.no_record" = "Make your first record.\nTrack changes with Anggle!";
 "history.card.pain.first_record" = "Anggle cheers your first step toward recovery!";
 
+/* History Summary Chart */
+"history.chart.period.week" = "Week";
+"history.chart.period.month" = "Month";
+"history.chart.period.three_month" = "3 Months";
+
 /* History Summary Chart - ROM Change */
 "history.chart.rom.title" = "Knee ROM Change";
 "history.chart.rom.better" = "%d° more than max %d° in this 7-day view";
