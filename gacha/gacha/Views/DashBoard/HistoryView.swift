@@ -143,8 +143,8 @@ struct History: View {
         let currentWeekEnd = currentWeekDates.max()
 
         // 전체 데이터의 첫/마지막 날짜
-        let dataStart = vm.recentRecords.first?.measuredDate
-        let dataEnd = vm.recentRecords.last?.measuredDate
+        let dataStart = vm.allRecords.first?.measuredDate
+        let dataEnd = vm.allRecords.last?.measuredDate
 
         // 왼쪽(과거로 이동): 이동 후 주의 끝이 데이터 시작일보다 앞서면 비활성화
         let disableLeft: Bool = {
