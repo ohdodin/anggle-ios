@@ -70,16 +70,16 @@ struct History: View {
     // MARK: - Chart Text
     private func ChartText(chartType: ChartType) -> some View {
         return VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                // Title
-                Text(
-                    chartType == .rom
-                        ? Strings.History.chartRomTitle
-                        : Strings.History.chartPainTitle
-                )
-                .font(.displaySublineBold)
-                .foregroundColor(.blue700)
-                .id(chartType == .rom ? "romChart" : "painChart")
+            // Title
+            Text(
+                chartType == .rom
+                    ? Strings.History.chartRomTitle
+                    : Strings.History.chartPainTitle
+            )
+            .font(.displaySublineBold)
+            .foregroundColor(.blue700)
+            .id(chartType == .rom ? "romChart" : "painChart")
+            VStack(alignment: .leading, spacing: 8) {
                 // Subtitle
                 if vm.chartData.isEmpty {
                     Text(
@@ -96,21 +96,26 @@ struct History: View {
                     Text(chartType == .rom ? vm.romSubtitle : vm.painSubtitle)
                         .font(.displayFootnoteRegular)
                 }
+
+                // Buttons & Date
+                if !vm.chartData.isEmpty {
+                    if chartType == .rom {
+                        romChartButton
+                    } else {
+                        painChartButton
+                    }
+                }
             }
-            // Buttons & Date
-            if !vm.chartData.isEmpty {
-                if chartType == .rom { romChartButton } else { painChartButton }
-            }
+            .opacity(
+                (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex)
+                    != nil ? 0 : 1
+            )
+            .animation(
+                .easeInOut(duration: 0.1),
+                value: (chartType == .rom
+                    ? vm.selectedROMIndex : vm.selectedPainIndex)
+            )
         }
-        .opacity(
-            (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex)
-                != nil ? 0 : 1
-        )
-        .animation(
-            .easeInOut(duration: 0.1),
-            value: (chartType == .rom
-                ? vm.selectedROMIndex : vm.selectedPainIndex)
-        )
     }
 
     // MARK: - romChartButton
@@ -501,7 +506,7 @@ struct History: View {
                                 y: .disabled
                             )
                         ) {
-                            romAnnotation(at: adjustedIndex)
+                            painAnnotation(at: adjustedIndex)
                         }
                 }
             }
@@ -532,26 +537,30 @@ struct History: View {
     }
 
     @ViewBuilder
-    private var painAnnotation: some View {
-        if let selectedIndex = vm.selectedPainIndex,
-            selectedIndex >= 0 && selectedIndex < vm.recentRecords.count
+    private func painAnnotation(at explicitIndex: Int? = nil) -> some View {
+        if let selectedIndex = explicitIndex ?? vm.selectedROMIndex,
+            selectedIndex >= 0 && selectedIndex < vm.week.count
         {
-            let selectedRecord = vm.recentRecords[selectedIndex]
+            let weekData = vm.getCurrentWeekData(type: .pain)
+            let selectedRecord = weekData[selectedIndex].record
             VStack(alignment: .leading, spacing: 4) {
                 Text(Strings.History.cardPainTitle)
                     .font(.displayCaption1Semibold)
                     .foregroundStyle(Color("Gray700"))
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text(formatPainLevel(selectedRecord.painLevel))
+                Text(formatPainLevel(selectedRecord?.painLevel))
                     .font(.displayTitle2Semibold)
                     .foregroundStyle(Color("Gray900"))
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text(vm.formatDate(selectedRecord.measuredDate))
-                    .font(.displayCaption1Semibold)
-                    .foregroundStyle(Color("Gray700"))
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(
+                    selectedRecord?.measuredDate != nil
+                        ? vm.formatDate(selectedRecord!.measuredDate) : "-"
+                )
+                .font(.displayCaption1Semibold)
+                .foregroundStyle(Color("Gray700"))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
 
             }
             .padding(.horizontal, 8)
