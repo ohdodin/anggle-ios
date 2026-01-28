@@ -2,7 +2,7 @@
 //  History.swift
 //  gacha
 //
-//  Created by 차원준 on 10/26/25.
+//  Created by 차원준 on 24/01/26.
 //
 
 import Charts
@@ -10,7 +10,6 @@ import SwiftData
 import SwiftUI
 
 struct History: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var vm: HistoryViewModel
 
     // MARK: - Body
@@ -24,95 +23,42 @@ struct History: View {
                         VStack(spacing: 32) {
                             // MARK: - Summary Cards
                             HStack(spacing: 14) {
-                                // 무릎 굽힘 범위 카드
+                                // Rom Card
                                 romSummaryCard(proxy: proxy)
 
-                                // 통증 정도 카드
+                                // Pain Card
                                 painSummaryCard(proxy: proxy)
                             }
 
-                            // MARK: - 무릎 가동범위 추이
+                            // MARK: - ROM Chart
                             VStack(alignment: .leading, spacing: 16) {
-
-                                VStack(alignment: .leading, spacing: 8) {
-                                    // Title
-                                    Text(Strings.History.chartRomTitle)
-                                        .font(.displaySublineBold)
-                                        .foregroundColor(.blue700)
-                                        .id("romChart")
-                                    // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                        .opacity(vm.selectedROMIndex != nil ? 0 : 1)
-                                        .animation(.easeInOut(duration: 0.1), value: vm.selectedROMIndex)
-                                    
-                                    if vm.chartData.isEmpty {
-                                        // 측정된 데이터가 없을 때
-                                        Text(Strings.History.chartRomNoRecord)
-                                            .font(.displayFootnoteRegular)
-                                            .frame(
-                                                maxWidth: .infinity,
-                                                alignment: .leading
-                                            )
-                                    } else {
-                                        // SubTitle
-                                        Text(vm.romSubtitle)
-                                            .font(.displayFootnoteRegular)
-                                        // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                            .opacity(vm.selectedROMIndex != nil ? 0 : 1)
-                                            .animation(.easeInOut(duration: 0.1), value: vm.selectedROMIndex)
-                                        
-                                        romChart
-
-                                    }
+                                ChartText(chartType: .rom)
+                                if !vm.chartData.isEmpty {
+                                    romChart
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(16)
-                                .background(Color("White"))
-                                .cornerRadius(24)
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(16)
+                            .background(.white)
+                            .cornerRadius(24)
 
-                            // MARK: - 통증 수준 추이
+                            // MARK: - Pain Chart
                             VStack(alignment: .leading, spacing: 16) {
-
-                                VStack(alignment: .leading, spacing: 8) {
-                                    // Title
-                                    Text(Strings.History.chartPainTitle)
-                                        .font(.displaySublineBold)
-                                        .foregroundColor(.blue700)
-                                        .id("painChart")
-                                    // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                        .opacity(vm.selectedPainIndex != nil ? 0 : 1)
-                                        .animation(.easeInOut(duration: 0.1), value: vm.selectedPainIndex)
-                                    
-                                    if vm.chartData.isEmpty {
-                                        // 측정된 데이터가 없을 때
-                                        Text(Strings.History.chartPainNoRecord)
-                                            .font(.displayFootnoteRegular)
-                                            .frame(
-                                                maxWidth: .infinity,
-                                                alignment: .leading
-                                            )
-                                    } else {
-                                        // SubTitle
-                                        Text(vm.painSubtitle)
-                                            .font(.displayFootnoteRegular)
-                                        // 인덱스 존재 -> 투명하게, 부재 -> 보이게
-                                            .opacity(vm.selectedPainIndex != nil ? 0 : 1)
-                                            .animation(.easeInOut(duration: 0.1), value: vm.selectedPainIndex)
-                                        painChart
-                                    }
+                                ChartText(chartType: .pain)
+                                if !vm.chartData.isEmpty {
+                                    painChart
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(16)
-                                .background(Color("White"))
-                                .cornerRadius(24)
                             }
+                            .frame(maxWidth: .infinity)
+                            .padding(16)
+                            .background(.white)
+                            .cornerRadius(24)
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
                         .padding(.bottom, 20)
                     }
                 }
-
             }
         }
         .background(Color("BackgoundSecondary"))
@@ -121,74 +67,230 @@ struct History: View {
         }
     }
 
-    // MARK: - Chart Views
+    // MARK: - Chart Text
+    private func ChartText(chartType: ChartType) -> some View {
+        return VStack(alignment: .leading, spacing: 16) {
+            // Title
+            Text(
+                chartType == .rom
+                    ? Strings.History.chartRomTitle
+                    : Strings.History.chartPainTitle
+            )
+            .font(.displaySublineBold)
+            .foregroundColor(.blue700)
+            .id(chartType == .rom ? "romChart" : "painChart")
+            VStack(alignment: .leading, spacing: 8) {
+                // Subtitle
+                if vm.chartData.isEmpty {
+                    Text(
+                        chartType == .rom
+                            ? Strings.History.chartRomNoRecord
+                            : Strings.History.chartPainNoRecord
+                    )
+                    .font(.displayFootnoteRegular)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
+                } else {
+                    Text(chartType == .rom ? vm.romSubtitle : vm.painSubtitle)
+                        .font(.displayFootnoteRegular)
+                }
 
+                // Buttons & Date
+                if !vm.chartData.isEmpty {
+                    if chartType == .rom {
+                        romChartButton
+                    } else {
+                        painChartButton
+                    }
+                }
+            }
+            .opacity(
+                (chartType == .rom ? vm.selectedROMIndex : vm.selectedPainIndex)
+                    != nil ? 0 : 1
+            )
+            .animation(
+                .easeInOut(duration: 0.1),
+                value: (chartType == .rom
+                    ? vm.selectedROMIndex : vm.selectedPainIndex)
+            )
+        }
+    }
+
+    // MARK: - romChartButton
+    private var romChartButton: some View {
+        let weekData = vm.getCurrentWeekData(type: .rom)
+
+        return HStack {
+
+            romChartButtonLeft
+
+            Spacer()
+
+            Text(
+                "\(vm.formatDate(weekData.first?.date ?? Date())) - \(vm.formatDate(weekData.last?.date ?? Date()))"
+            )
+            .font(.displayFootnoteRegular)
+
+            Spacer()
+
+            romChartButtonRight
+        }
+    }
+
+    private var romChartButtonLeft: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData(type: .rom)
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
+
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.allRecords.first?.measuredDate
+        let dataEnd = vm.allRecords.last?.measuredDate
+
+        // 왼쪽(과거로 이동): 이동 후 주의 끝이 데이터 시작일보다 앞서면 비활성화
+        let disableLeft: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataStart else {
+                return true
+            }
+            guard
+                let previousWeekEnd = calendar.date(
+                    byAdding: .day,
+                    value: -1,
+                    to: currentWeekStart
+                )
+            else { return true }
+            return previousWeekEnd < calendar.startOfDay(for: dataStart)
+        }()
+
+        return
+            Button {
+                if !disableLeft {
+                    vm.currentROMWeekOffset += 1
+                    vm.selectedROMIndex = nil
+                }
+            } label: {
+                Image(systemName: "chevron.left")
+            }
+            .disabled(disableLeft)
+    }
+
+    private var romChartButtonRight: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData(type: .rom)
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
+
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.recentRecords.first?.measuredDate
+        let dataEnd = vm.recentRecords.last?.measuredDate
+
+        // 오른쪽(미래로 이동): 이동 후 주의 시작이 데이터 마지막보다 뒤면 비활성화
+        let disableRight: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataEnd else {
+                return true
+            }
+            guard
+                let nextWeekStart = calendar.date(
+                    byAdding: .day,
+                    value: 1,
+                    to: currentWeekEnd
+                )
+            else { return true }
+            return calendar.startOfDay(for: nextWeekStart)
+                > calendar.startOfDay(for: dataEnd)
+        }()
+
+        return
+            Button {
+                if !disableRight {
+                    vm.currentROMWeekOffset -= 1
+                    vm.selectedROMIndex = nil
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(disableRight)
+
+    }
+
+    // MARK: - Chart Views
     private var romChart: some View {
         let data = vm.chartData
-        let domain = vm.xAxisDomain
         let selectedIndex = vm.selectedROMIndex
 
-        return Chart {
+        let weekData = vm.getCurrentWeekData(type: .rom)  // 빈 데이터 가공
 
-            ForEach(data, id: \.record.id) { item in
-                BarMark(
-                    x: .value("index", item.index),
-                    yStart: .value("angle", item.record.extensionAngle ?? 0),
-                    yEnd: .value("angle", item.record.flexionAngle ?? 0),
-                    width: .fixed(12)
-                )
-                .foregroundStyle(
-                    Color("Blue500")
-                )
-                .cornerRadius(4)
+        return Chart {
+            ForEach(0..<vm.week.count, id: \.self) { weekdayIndex in
+                let dayData = weekData[weekdayIndex]
+
+                if let record = dayData.record {
+                    BarMark(
+                        x: .value("weekday", weekdayIndex),
+                        yStart: .value("angle", record.extensionAngle ?? 0),
+                        yEnd: .value("angle", record.flexionAngle ?? 0),
+                        width: .fixed(12)
+                    )
+                    .foregroundStyle(
+                        Color("Blue500")
+                    )
+                    .cornerRadius(4)
+                } else {
+                    // 데이터가 없는 날 (빈 바)
+                    BarMark(
+                        x: .value("weekday", weekdayIndex),
+                        yStart: .value("angle", 0),
+                        yEnd: .value("angle", 0.5),
+                        width: .fixed(12)
+                    )
+                    .foregroundStyle(Color("Gray200").opacity(0.3))
+                    .cornerRadius(4)
+                }
             }
-            
-            // 도딘의 유산
-            // 130도 기준선
-//            RuleMark(y: .value("Target", 130))
-//                .foregroundStyle(Color("Blue700"))
-//                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-//                .annotation(position: .trailing, alignment: .center) {
-//                    Text("130°")
-//                        .font(.displayCaption1Regular)
-//                        .foregroundStyle(Color("Blue700"))
-//                }
 
             if let selectedIndex = selectedIndex,
-                selectedIndex >= 0 && selectedIndex < data.count
+                selectedIndex >= 0 && selectedIndex < vm.week.count
             {
-                RuleMark(x: .value("Selected", selectedIndex))
-                    .foregroundStyle(Color("Gray300"))
-                    .zIndex(-1)
-                    .annotation(
-                        position: .top,
-                        spacing: 8,
-                        overflowResolution: .init(
-                            x: .fit(to: .chart),
-                            y: .disabled
-                        )
-                    ) {
-                        romAnnotation
-                    }
+                let adjustedIndex = nearestAvailableIndex(
+                    from: selectedIndex,
+                    in: weekData
+                )
+                if let adjustedIndex = adjustedIndex {
+                    RuleMark(x: .value("Selected", adjustedIndex))
+                        .foregroundStyle(Color("Gray300"))
+                        .zIndex(-1)
+                        .annotation(
+                            position: .top,
+                            spacing: 8,
+                            overflowResolution: .init(
+                                x: .fit(to: .chart),
+                                y: .disabled
+                            )
+                        ) {
+                            romAnnotation(at: adjustedIndex)
+                        }
+                }
             }
         }
         .chartXAxis {
-            AxisMarks(position: .bottom, values: vm.chartIndicesAsDouble) {
+            AxisMarks(values: .stride(by: 1)) {
                 value in
-                if let doubleValue = value.as(Double.self) {
-                    let index = Int(round(doubleValue))
-                    // 정확한 인덱스 값인지 확인 (0.01 이내 오차 허용)
-                    if abs(doubleValue - Double(index)) < 0.01,
-                        index >= 0 && index < vm.recentRecords.count
+                if let index = value.as(Double.self) {
+                    if let index = value.as(Int.self),
+                        index >= 0 && index < vm.week.count
                     {
-                        let record = vm.recentRecords[index]
-                        let dateStr = vm.formatShortDate(record.measuredDate)
                         AxisValueLabel {
-                            Text(dateStr)
-                                .offset(x: -17)
+                            Text(vm.week[index])
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .offset(x: -10)
                         }
-                    } else {
-                        AxisGridLine()
                     }
                 }
             }
@@ -203,34 +305,42 @@ struct History: View {
                 AxisGridLine()
             }
         }
+        .chartXScale(domain: -0.5...6.5)
         .chartYScale(domain: 0...max(150, vm.romMaxValue))
-        .chartXScale(domain: domain)
-        .chartXSelection(value: $vm.selectedROMIndex) //롱프레스 감지
+        .chartXSelection(value: $vm.selectedROMIndex)  //롱프레스 감지
         .frame(height: 361)
         .padding(.top, 20)
     }
 
     @ViewBuilder
-    private var romAnnotation: some View {
-        if let selectedIndex = vm.selectedROMIndex,
-            selectedIndex >= 0 && selectedIndex < vm.recentRecords.count
+    private func romAnnotation(at explicitIndex: Int? = nil) -> some View {
+        if let selectedIndex = explicitIndex ?? vm.selectedROMIndex,
+            selectedIndex >= 0 && selectedIndex < vm.week.count
         {
-            let selectedRecord = vm.recentRecords[selectedIndex]
+            let weekData = vm.getCurrentWeekData(type: .rom)
+
+            let selectedRecord = weekData[selectedIndex]
             VStack(alignment: .center, spacing: 4) {
                 Text(Strings.History.cardRomTitle)
                     .font(.displayCaption1Semibold)
                     .foregroundStyle(Color("Gray700"))
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text("\(Int(selectedRecord.extensionAngle ?? 0))°~\(Int(selectedRecord.flexionAngle ?? 0))°")
-                    .font(.displayTitle2Semibold)
-                    .foregroundStyle(Color("Gray900"))
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(
+                    "\(Int(selectedRecord.record?.extensionAngle ?? 0))°~\(Int(selectedRecord.record?.flexionAngle ?? 0))°"
+                )
+                .font(.displayTitle2Semibold)
+                .foregroundStyle(Color("Gray900"))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text(vm.formatDate(selectedRecord.measuredDate))
-                    .font(.displayCaption1Semibold)
-                    .foregroundStyle(Color("Gray700"))
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(
+                    selectedRecord.record?.measuredDate != nil
+                        ? vm.formatDate(selectedRecord.record!.measuredDate)
+                        : "-"
+                )
+                .font(.displayCaption1Semibold)
+                .foregroundStyle(Color("Gray700"))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -240,95 +350,217 @@ struct History: View {
         }
     }
 
+    // MARK: - painChartButton
+    private var painChartButton: some View {
+        let weekData = vm.getCurrentWeekData(type: .pain)
+
+        return HStack {
+
+            painChartButtonLeft
+
+            Spacer()
+
+            Text(
+                "\(vm.formatDate(weekData.first?.date ?? Date())) - \(vm.formatDate(weekData.last?.date ?? Date()))"
+            )
+            .font(.displayFootnoteRegular)
+
+            Spacer()
+
+            painChartButtonRight
+        }
+    }
+
+    private var painChartButtonLeft: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData(type: .pain)
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
+
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.recentRecords.first?.measuredDate
+        let dataEnd = vm.recentRecords.last?.measuredDate
+
+        // 왼쪽(과거로 이동): 이동 후 주의 끝이 데이터 시작일보다 앞서면 비활성화
+        let disableLeft: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataStart else {
+                return true
+            }
+            guard
+                let previousWeekEnd = calendar.date(
+                    byAdding: .day,
+                    value: -1,
+                    to: currentWeekStart
+                )
+            else { return true }
+            return previousWeekEnd < calendar.startOfDay(for: dataStart)
+        }()
+
+        return
+            Button {
+                if !disableLeft {
+                    vm.currentPainWeekOffset += 1
+                    vm.selectedPainIndex = nil
+                }
+            } label: {
+                Image(systemName: "chevron.left")
+            }
+            .disabled(disableLeft)
+    }
+
+    private var painChartButtonRight: some View {
+        // 현재 주(오프셋 적용)의 주간 범위 계산
+        let weekData = vm.getCurrentWeekData(type: .pain)
+        let calendar = Calendar.current
+        let currentWeekDates = weekData.compactMap { $0.date }
+        let currentWeekStart = currentWeekDates.min()
+        let currentWeekEnd = currentWeekDates.max()
+
+        // 전체 데이터의 첫/마지막 날짜
+        let dataStart = vm.recentRecords.first?.measuredDate
+        let dataEnd = vm.recentRecords.last?.measuredDate
+
+        // 오른쪽(미래로 이동): 이동 후 주의 시작이 데이터 마지막보다 뒤면 비활성화
+        let disableRight: Bool = {
+            guard let currentWeekStart, let currentWeekEnd, let dataEnd else {
+                return true
+            }
+            guard
+                let nextWeekStart = calendar.date(
+                    byAdding: .day,
+                    value: 1,
+                    to: currentWeekEnd
+                )
+            else { return true }
+            return calendar.startOfDay(for: nextWeekStart)
+                > calendar.startOfDay(for: dataEnd)
+        }()
+
+        return
+            Button {
+                if !disableRight {
+                    vm.currentPainWeekOffset -= 1
+                    vm.selectedPainIndex = nil
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+            }
+            .disabled(disableRight)
+
+    }
+
     private var painChart: some View {
         let data = vm.chartData
-        let domain = vm.xAxisDomain
         let selectedIndex = vm.selectedPainIndex
 
+        let weekData = vm.getCurrentWeekData(type: .pain)  // 빈 데이터 가공
+
         return Chart {
-            ForEach(data, id: \.record.id) { item in
-                LineMark(
-                    x: .value("index", item.index),
-                    y: .value("pain", item.record.painLevel ?? 0)
-                )
-                .foregroundStyle(Color(.blue500))
-                .interpolationMethod(.catmullRom)
+            ForEach(0..<vm.week.count, id: \.self) { weekdayIndex in
+                let dayData = weekData[weekdayIndex]
 
-                PointMark(
-                    x: .value("index", item.index),
-                    y: .value("pain", item.record.painLevel ?? 0)
-                )
-                .foregroundStyle(Color("Blue500"))
-                .symbolSize(80)
+                if let record = dayData.record {
+                    LineMark(
+                        x: .value("weekday", weekdayIndex),
+                        y: .value("pain", record.painLevel ?? 0)
+                    )
+                    .foregroundStyle(Color(.blue500))
+                    .interpolationMethod(.catmullRom)
+                    PointMark(
+                        x: .value("weekday", weekdayIndex),
+                        y: .value("pain", record.painLevel ?? 0),
+                    )
+                    .foregroundStyle(Color("Blue500"))
+                    .symbolSize(80)
+
+                } else {
+                    // 데이터가 없는 날 (빈 바)
+                    BarMark(
+                        x: .value("weekday", weekdayIndex),
+                        yStart: .value("angle", 0),
+                        yEnd: .value("angle", 0.5),
+                        width: .fixed(12)
+                    )
+                    .foregroundStyle(Color("Gray200").opacity(0.3))
+                    .cornerRadius(4)
+                }
             }
-
             if let selectedIndex = selectedIndex,
-                selectedIndex >= 0 && selectedIndex < data.count
+                selectedIndex >= 0 && selectedIndex < vm.week.count
             {
-                RuleMark(x: .value("Selected", selectedIndex))
-                    .foregroundStyle(Color("Gray300"))
-                    .zIndex(-1)
-                    .annotation(
-                        position: .top,
-                        spacing: 0,
-                        overflowResolution: .init(
-                            x: .fit(to: .chart),
-                            y: .disabled
-                        )
-                    ) {
-                        painAnnotation
-                    }
+                let adjustedIndex = nearestAvailableIndex(
+                    from: selectedIndex,
+                    in: weekData
+                )
+                if let adjustedIndex = adjustedIndex {
+                    RuleMark(x: .value("Selected", adjustedIndex))
+                        .foregroundStyle(Color("Gray300"))
+                        .zIndex(-1)
+                        .annotation(
+                            position: .top,
+                            spacing: 8,
+                            overflowResolution: .init(
+                                x: .fit(to: .chart),
+                                y: .disabled
+                            )
+                        ) {
+                            painAnnotation(at: adjustedIndex)
+                        }
+                }
             }
         }
         .chartXAxis {
-            AxisMarks(position: .bottom, values: vm.chartIndicesAsDouble) {
+            AxisMarks(values: .stride(by: 1)) {
                 value in
-                if let doubleValue = value.as(Double.self) {
-                    let index = Int(round(doubleValue))
-                    // 정확한 인덱스 값인지 확인 (0.01 이내 오차 허용)
-                    if abs(doubleValue - Double(index)) < 0.01,
-                        index >= 0 && index < vm.recentRecords.count
+                if let index = value.as(Double.self) {
+                    if let index = value.as(Int.self),
+                        index >= 0 && index < vm.week.count
                     {
-                        let record = vm.recentRecords[index]
-                        let dateStr = vm.formatShortDate(record.measuredDate)
+                        AxisGridLine(centered: true)
                         AxisValueLabel {
-                            Text(dateStr)
-                                .offset(x: -17)
+                            Text(vm.week[index])
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .offset(x: -10)
                         }
-                    } else {
-                        AxisGridLine()
                     }
                 }
             }
         }
+        .chartXScale(domain: -0.5...6.5)
         .chartYScale(domain: 0...10)
-        .chartXScale(domain: domain)
         .chartXSelection(value: $vm.selectedPainIndex)
         .frame(height: 250)
         .padding(.top, 20)
     }
 
     @ViewBuilder
-    private var painAnnotation: some View {
-        if let selectedIndex = vm.selectedPainIndex,
-            selectedIndex >= 0 && selectedIndex < vm.recentRecords.count
+    private func painAnnotation(at explicitIndex: Int? = nil) -> some View {
+        if let selectedIndex = explicitIndex ?? vm.selectedROMIndex,
+            selectedIndex >= 0 && selectedIndex < vm.week.count
         {
-            let selectedRecord = vm.recentRecords[selectedIndex]
+            let weekData = vm.getCurrentWeekData(type: .pain)
+            let selectedRecord = weekData[selectedIndex].record
             VStack(alignment: .leading, spacing: 4) {
                 Text(Strings.History.cardPainTitle)
                     .font(.displayCaption1Semibold)
                     .foregroundStyle(Color("Gray700"))
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text(formatPainLevel(selectedRecord.painLevel))
+                Text(formatPainLevel(selectedRecord?.painLevel))
                     .font(.displayTitle2Semibold)
                     .foregroundStyle(Color("Gray900"))
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
-                Text(vm.formatDate(selectedRecord.measuredDate))
-                    .font(.displayCaption1Semibold)
-                    .foregroundStyle(Color("Gray700"))
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(
+                    selectedRecord?.measuredDate != nil
+                        ? vm.formatDate(selectedRecord!.measuredDate) : "-"
+                )
+                .font(.displayCaption1Semibold)
+                .foregroundStyle(Color("Gray700"))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
 
             }
             .padding(.horizontal, 8)
@@ -343,121 +575,140 @@ struct History: View {
 
     @ViewBuilder
     private func romSummaryCard(proxy: ScrollViewProxy) -> some View {
-            VStack(alignment: .leading) {
+        VStack(alignment: .leading) {
 
-                // ROM 수치 표시
-                HStack(spacing: 0) {
-                    if vm.totalRecordCount < 2 {
-                    } else if let first = vm.firstAvailableROM,
-                              let latest = vm.latestROM
-                    {
-                        // 기록이 여러 개일 때
-                        let change = latest - first
-                        Text("\(change > 0 ? "↑" : "")\(change)°")
-                            .font(.roundedTitle1Bold)
-                            .foregroundColor(Color("Gray900"))
-                    }
-                    Spacer()
-
+            // ROM 수치 표시
+            HStack(spacing: 0) {
+                if vm.totalRecordCount < 2 {
+                } else if let first = vm.firstAvailableROM,
+                    let latest = vm.latestROM
+                {
+                    // 기록이 여러 개일 때
+                    let change = latest - first
+                    Text("\(change > 0 ? "↑" : "")\(change)°")
+                        .font(.roundedTitle1Bold)
+                        .foregroundColor(Color("Gray900"))
                 }
-                
                 Spacer()
 
-                VStack(alignment:.leading, spacing: 4){
-                    // 헤더
-                    HStack {
-                        Text(Strings.History.cardRomTitle)
-                            .font(.displaySublineBold)
-                            .foregroundColor(Color("Blue700"))
-                    }
-        
-
-                    // 변화 설명 텍스트
-                    Text(
-                        vm.totalRecordCount < 2
-                            ? Strings.History.cardRomUnder2
-                            : vm.romChangeText
-                    )
-                    .font(
-                        vm.totalRecordCount < 2
-                            ? .displayFootnoteRegular : .displayCalloutRegular
-                    )
-                    .foregroundColor(Color("Gray700"))
-                    .lineLimit(3)
-                }
-                
-
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .frame(width: 173, height: 173)
-            .background(Color.white)
-            .cornerRadius(15)
+
+            Spacer()
+
+            VStack(alignment: .leading, spacing: 4) {
+                // 헤더
+                HStack {
+                    Text(Strings.History.cardRomTitle)
+                        .font(.displaySublineBold)
+                        .foregroundColor(Color("Blue700"))
+                }
+
+                // 변화 설명 텍스트
+                Text(
+                    vm.totalRecordCount < 2
+                        ? Strings.History.cardRomUnder2
+                        : vm.romChangeText
+                )
+                .font(
+                    vm.totalRecordCount < 2
+                        ? .displayFootnoteRegular : .displayCalloutRegular
+                )
+                .foregroundColor(Color("Gray700"))
+                .lineLimit(3)
+            }
+
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .frame(width: 173, height: 173)
+        .background(Color.white)
+        .cornerRadius(15)
+    }
     @ViewBuilder
     private func painSummaryCard(proxy: ScrollViewProxy) -> some View {
 
-            VStack(alignment: .leading) {
-                
-                // 통증 레벨 바 표시
-                HStack(spacing: 0) {
-                    if vm.totalRecordCount < 2 {
+        VStack(alignment: .leading) {
 
-                    } else if let first = vm.firstAvailablePainLevel,
-                              let latest = vm.latestPainLevel
-                    {
-                        // 기록이 여러 개일 때
-                        let change = latest - first
-                        Text("\(change < 0 ? "↓" : "")\(abs(change)) \(Strings.History.cardPainStep)")
-                            .font(.roundedTitle1Bold)
-                            .foregroundColor(Color("Gray900"))
-                    }
-                    Spacer()
-                }
-                
-                Spacer()
+            // 통증 레벨 바 표시
+            HStack(spacing: 0) {
+                if vm.totalRecordCount < 2 {
 
-                VStack(alignment:.leading, spacing: 4){
-                    
-                    
-                    // 헤더
-                    HStack {
-                        Text(Strings.History.chartPainTitle)
-                            .font(.displaySublineBold)
-                            .foregroundColor(Color("Blue700"))
-                    }
-                    
-                    
-                    
-                    // 변화 설명 텍스트
+                } else if let first = vm.firstAvailablePainLevel,
+                    let latest = vm.latestPainLevel
+                {
+                    // 기록이 여러 개일 때
+                    let change = latest - first
                     Text(
-                        vm.totalRecordCount == 0
+                        "\(change < 0 ? "↓" : "")\(abs(change)) \(Strings.History.cardPainStep)"
+                    )
+                    .font(.roundedTitle1Bold)
+                    .foregroundColor(Color("Gray900"))
+                }
+                Spacer()
+            }
+
+            Spacer()
+
+            VStack(alignment: .leading, spacing: 4) {
+
+                // 헤더
+                HStack {
+                    Text(Strings.History.chartPainTitle)
+                        .font(.displaySublineBold)
+                        .foregroundColor(Color("Blue700"))
+                }
+
+                // 변화 설명 텍스트
+                Text(
+                    vm.totalRecordCount == 0
                         ? Strings.History.cardPainNoRecord
                         : (vm.totalRecordCount < 2
-                           ? Strings.History.cardPainFirstRecord
-                           : vm.painChangeText)
-                    )
-                    .font(
-                        vm.totalRecordCount < 2
+                            ? Strings.History.cardPainFirstRecord
+                            : vm.painChangeText)
+                )
+                .font(
+                    vm.totalRecordCount < 2
                         ? .displayFootnoteRegular : .displayCalloutRegular
-                    )
-                    .foregroundColor(Color("Gray700"))
-                    .lineLimit(3)
-                }
+                )
+                .foregroundColor(Color("Gray700"))
+                .lineLimit(3)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .frame(width: 173, height: 173)
-            .background(Color.white)
-            .cornerRadius(15)
-//        }
-        
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .frame(width: 173, height: 173)
+        .background(Color.white)
+        .cornerRadius(15)
+        //        }
+
     }
 
     // MARK: - Helper Methods
     private func formatPainLevel(_ level: Int?) -> String {
         guard let level = level else { return "-" }
         return "\(level)"
+    }
+
+    // 가장 가까운 기록이 있는 인덱스를 찾는 헬퍼
+    private func nearestAvailableIndex(
+        from index: Int,
+        in weekData: [HistoryViewModel.WeekDayData]
+    ) -> Int? {
+        guard index >= 0 && index < weekData.count else { return nil }
+        if weekData[index].record != nil { return index }
+        var offset = 1
+        while index - offset >= 0 || index + offset < weekData.count {
+            if index - offset >= 0, weekData[index - offset].record != nil {
+                return index - offset
+            }
+            if index + offset < weekData.count,
+                weekData[index + offset].record != nil
+            {
+                return index + offset
+            }
+            offset += 1
+        }
+        return nil
     }
 }
 
