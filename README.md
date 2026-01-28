@@ -39,7 +39,7 @@
 </table>
 
 > 본 프로젝트는 **Apple Developer Academy @ POSTECH**에서 2025년 9월~2025년 11월까지 6인 팀 프로젝트로 시작되었습니다.  
-> 2025년 12월부터 2안 프로젝트로 전환하여 지속적으로 개발하고 있습니다.
+> 2025년 12월부터 2인 프로젝트로 전환하여 지속적으로 개발하고 있습니다.
 > 
 > - **아카데미 프로젝트 기간**: 2025.09 ~ 2025.11
 > - **원본 레포지토리**: [DeveloperAcademy-POSTECH/2025-C6-M14-Gacha](https://github.com/DeveloperAcademy-POSTECH/2025-C6-M14-Gacha)
