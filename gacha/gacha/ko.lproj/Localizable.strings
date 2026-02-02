@@ -170,7 +170,7 @@
 /* History Summary Chart */
 "history.chart.period.week" = "일주일";
 "history.chart.period.month" = "한 달";
-"history.chart.period.three_month" = "3개월";
+"history.chart.period.three_months" = "3개월";
 
 /* History Summary Chart - ROM Change */
 "history.chart.rom.title" = "무릎 가동 범위 변화";
