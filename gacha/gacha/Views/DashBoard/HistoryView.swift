@@ -101,7 +101,7 @@ struct History: View {
                 Picker("", selection: chartType == .rom ? $vm.romPeriod : $vm.painPeriod) {
                     Text("주").tag(ChartPeriod.week)
                     Text("월").tag(ChartPeriod.month)
-                    Text("월").tag(ChartPeriod.threeMonth)
+                    Text("월").tag(ChartPeriod.threeMonths)
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: chartType == .rom ? vm.romPeriod : vm.painPeriod) { _ in
