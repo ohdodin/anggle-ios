@@ -290,6 +290,11 @@ enum Strings {
         }
         static var cardPainNoRecord: String { NSLocalizedString("history.card.pain.no_record", comment: "") }
         static var cardPainFirstRecord: String { NSLocalizedString("history.card.pain.first_record", comment: "") }
+        
+        // Chart
+        static var periodWeek: String { NSLocalizedString("history.chart.period.week", comment: "")}
+        static var periodMonth: String { NSLocalizedString("history.chart.period.month", comment: "")}
+        static var periodThreeMonths: String { NSLocalizedString("history.chart.period.three_months", comment: "")}
 
         // Chart - ROM
         static var chartRomTitle: String { NSLocalizedString("history.chart.rom.title", comment: "") }

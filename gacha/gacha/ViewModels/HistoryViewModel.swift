@@ -14,6 +14,19 @@ enum ChartType: Hashable {
     case pain
 }
 
+enum ChartPeriod: String, CaseIterable, Identifiable {
+    case week, month, threeMonths
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .week: return Strings.History.periodWeek
+        case .month: return Strings.History.periodMonth
+        case .threeMonths: return Strings.History.periodThreeMonths
+        }
+    }
+}
+
 class HistoryViewModel: ObservableObject {
     private var repository: RecordRepository
 
@@ -22,10 +35,12 @@ class HistoryViewModel: ObservableObject {
     @Published var selectedROMDate: Date? = nil
     @Published var selectedPainDate: Date? = nil
     @Published var selectedROMIndex: Int? = nil  // 0~6 (일~토)
-    @Published var selectedPainIndex: Int? = nil // 0~6 (일~토)
+    @Published var selectedPainIndex: Int? = nil  // 0~6 (일~토)
     @Published var currentROMWeekOffset: Int = 0
     @Published var currentPainWeekOffset: Int = 0
     @Published var isLoading: Bool = false
+    @Published var romPeriod: ChartPeriod = .week
+    @Published var painPeriod: ChartPeriod = .week
 
     init(repository: RecordRepository) {
         self.repository = repository

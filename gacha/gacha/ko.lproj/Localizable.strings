@@ -167,6 +167,11 @@
 "history.card.pain.no_record" = "첫 기록을 남겨보세요.\nAnggle과 함께\n변화를 기록해봐요!";
 "history.card.pain.first_record" = "첫 기록을 남기셨군요.\n회복을 향한 첫걸음\nAnggle이 응원해요!";
 
+/* History Summary Chart */
+"history.chart.period.week" = "일주일";
+"history.chart.period.month" = "한 달";
+"history.chart.period.three_months" = "3개월";
+
 /* History Summary Chart - ROM Change */
 "history.chart.rom.title" = "무릎 가동 범위 변화";
 "history.chart.rom.better" = "현재 보이는 7일간 최대였던 %d°보다 %d° 더 움직여요";
