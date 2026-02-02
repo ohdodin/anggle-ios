@@ -63,12 +63,12 @@ final class MeasureViewModel: ObservableObject {
         case .idle:
             return 0.0
         case .started:
-            return 0.1  // 시작
+            return 0.0  // 시작
         case .moving:
-            return 0.2  // 움직임 감지
+            return 0.0  // 움직임 감지
         case .stabilizing:
-            // 0.3에서 1.0까지 (stabilizingProgress 기반)
-            return 0.2 + (stabilizingProgress * 0.7)
+            // 전체 과정 3초
+            return stabilizingProgress
         case .completed:
             return 1.0
         }
