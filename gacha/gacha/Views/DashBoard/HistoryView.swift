@@ -99,10 +99,11 @@ struct History: View {
                 
                 // Period Selector
                 Picker("", selection: chartType == .rom ? $vm.romPeriod : $vm.painPeriod) {
-                    Text("주").tag(ChartPeriod.week)
-                    Text("월").tag(ChartPeriod.month)
-                    Text("월").tag(ChartPeriod.threeMonths)
+                    Text(ChartPeriod.week.title).tag(ChartPeriod.week)
+                    Text(ChartPeriod.month.title).tag(ChartPeriod.month)
+                    Text(ChartPeriod.threeMonths.title).tag(ChartPeriod.threeMonths)
                 }
+                
                 .pickerStyle(.segmented)
                 .onChange(of: chartType == .rom ? vm.romPeriod : vm.painPeriod) { _ in
                     // 기간 바뀔 때 선택 초기화 / 오프셋 초기화(필요시)
